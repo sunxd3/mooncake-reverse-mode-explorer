@@ -1,0 +1,13 @@
+--- stage1
++++ stage2
+-9 1 ─ %1 = $(Expr(:boundscheck, true))::Bool
++9 1 ─      nothing::Bool
+-  │   %2 =   builtin Base.getfield(_2, 1, %1)::Float64
++  │   %2 =   dynamic (Mooncake.lgetfield)(_2, Val{1}(), Val{true}())::Float64
+-  │   %3 = $(Expr(:boundscheck, true))::Bool
++  │        nothing::Bool
+-  │   %4 =   builtin Base.getfield(_2, 2, %3)::Vector{Float64}
++  │   %4 =   dynamic (Mooncake.lgetfield)(_2, Val{2}(), Val{true}())::Vector{Float64}
+-  │   %6 = intrinsic Base.add_float(%2, %5)::Float64
++  │   %6 =   dynamic (Mooncake.IntrinsicsWrappers.add_float)(%2, %5)::Float64
+

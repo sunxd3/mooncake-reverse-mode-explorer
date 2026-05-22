@@ -1,0 +1,8 @@
+9 1 ─      nothing::Bool
+  │   %2 =   dynamic (Mooncake.lgetfield)(_2, Val{1}(), Val{true}())::Float64
+  │        nothing::Bool
+  │   %4 =   dynamic (Mooncake.lgetfield)(_2, Val{2}(), Val{true}())::Vector{Float64}
+  │   %5 = dynamic invoke Main.sum(%4::Vector{Float64})::Float64
+  │   %6 =   dynamic (Mooncake.IntrinsicsWrappers.add_float)(%2, %5)::Float64
+  └──      return %6
+  

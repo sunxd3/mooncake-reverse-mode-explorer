@@ -1,0 +1,35 @@
+9 1 ─         dynamic (Mooncake.get_shared_data_field)(_1, 1)::Any
+  │   %2  =   dynamic (Mooncake.get_shared_data_field)(_1, 2)::Any
+  │   %3  =   dynamic (Mooncake.get_shared_data_field)(_1, 3)::Any
+  └──         dynamic (Mooncake.__assemble_lazy_zero_rdata)(%2, _2, _3)::Any
+  2 ─       nothing::Any
+  │   %6  =   dynamic (Mooncake.uninit_fcodual)(Mooncake.lgetfield)::Any
+  │   %7  =   dynamic (Mooncake.uninit_fcodual)(Val{1}())::Any
+  │   %8  =   dynamic (Mooncake.uninit_fcodual)(Val{true}())::Any
+  │   %9  =   dynamic (Mooncake.rrule!!)(%6, _3, %7, %8)::Any
+  │   %10 =   builtin (getfield)(%9, 1)::Any
+  │         nothing::Any
+  │   %12 =   builtin (typeassert)(%10, Mooncake.CoDual{Float64, Mooncake.NoFData})::Any
+  │         nothing::Any
+  │   %14 =   dynamic (Mooncake.uninit_fcodual)(Mooncake.lgetfield)::Any
+  │   %15 =   dynamic (Mooncake.uninit_fcodual)(Val{2}())::Any
+  │   %16 =   dynamic (Mooncake.uninit_fcodual)(Val{true}())::Any
+  │   %17 =   dynamic (Mooncake.rrule!!)(%14, _3, %15, %16)::Any
+  │   %18 =   builtin (getfield)(%17, 1)::Any
+  │         nothing::Any
+  │   %20 =   builtin (typeassert)(%18, Mooncake.CoDual{Vector{Float64}, Vector{Float64}})::Any
+  │   %21 =   dynamic (Mooncake.uninit_fcodual)(sum)::Any
+  │   %22 =   dynamic (Mooncake.rrule!!)(%21, %20)::Any
+  │   %23 =   builtin (getfield)(%22, 1)::Any
+  │   %24 =   builtin (getfield)(%22, 2)::Mooncake.var"#sum_pb!!#rrule!!##128"{Float64, Vector{Float64}}
+  │   %25 =   builtin (typeassert)(%23, Mooncake.CoDual{Float64, Mooncake.NoFData})::Any
+  │   %26 =   dynamic (Mooncake.uninit_fcodual)(Mooncake.IntrinsicsWrappers.add_float)::Any
+  │   %27 =   dynamic (Mooncake.rrule!!)(%26, %12, %25)::Any
+  │   %28 =   builtin (getfield)(%27, 1)::Any
+  │         nothing::Any
+  │   %30 =   builtin (typeassert)(%28, Mooncake.CoDual{Float64, Mooncake.NoFData})::Any
+  │   %31 =   builtin (typeassert)(%30, Mooncake.CoDual{Float64, Mooncake.NoFData})::Any
+  │   %32 =   builtin (tuple)(%24)::Any
+  │           dynamic (push!)(%3, %32)::Any
+  └──       return %31
+  

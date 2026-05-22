@@ -1,0 +1,76 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Light "debugger" surface palette */
+  --color-surface-0: #f5f6f8;
+  --color-surface-1: #ffffff;
+  --color-surface-2: #eef0f3;
+  --color-surface-3: #e3e6ea;
+  --color-border: #d6d9df;
+  --color-border-subtle: #e8eaee;
+  --color-ink: #16181d;
+  --color-ink-2: #4a5160;
+  --color-ink-3: #8a92a0;
+
+  --color-accent: #4f46e5;
+  --color-accent-soft: #eef0fe;
+
+  /* Phase colours */
+  --color-forward: #2563eb;
+  --color-forward-soft: #e8f0ff;
+  --color-reverse: #d97706;
+  --color-reverse-soft: #fdf0dd;
+  --color-restore: #7c3aed;
+  --color-restore-soft: #f1e9fe;
+
+  --color-ok: #15803d;
+  --color-bad: #dc2626;
+  --color-change: #fde68a;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--color-surface-0);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ink-3);
+}
+
+/* Soft flash when a state cell's value changes between steps */
+@keyframes cell-flash {
+  from {
+    background-color: var(--color-change);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+.cell-flash {
+  animation: cell-flash 0.7s ease-out;
+}

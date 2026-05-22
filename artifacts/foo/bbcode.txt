@@ -1,0 +1,9 @@
+Block 1 (id=Mooncake.BasicBlockCode.ID(7)):
+  Mooncake.BasicBlockCode.ID(0): nothing :: Bool
+  Mooncake.BasicBlockCode.ID(1): (Mooncake.lgetfield)(_2, Val{1}(), Val{true}()) :: Float64
+  Mooncake.BasicBlockCode.ID(2): nothing :: Bool
+  Mooncake.BasicBlockCode.ID(3): (Mooncake.lgetfield)(_2, Val{2}(), Val{true}()) :: Vector{Float64}
+  Mooncake.BasicBlockCode.ID(4): $(Expr(:invoke, MethodInstance for sum(::Vector{Float64}), :(Main.sum), Mooncake.BasicBlockCode.ID(3))) :: Float64
+  Mooncake.BasicBlockCode.ID(5): (Mooncake.IntrinsicsWrappers.add_float)(Mooncake.BasicBlockCode.ID(1), Mooncake.BasicBlockCode.ID(4)) :: Float64
+  Mooncake.BasicBlockCode.ID(6): return Mooncake.BasicBlockCode.ID(5) :: Any
+

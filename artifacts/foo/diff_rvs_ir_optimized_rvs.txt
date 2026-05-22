@@ -1,0 +1,118 @@
+--- stage1
++++ stage2
+-9 1 ─         dynamic (Mooncake.get_shared_data_field)(_1, 1)::Any
++9 1 ── %1  =   builtin Mooncake.getfield(_1, 3)::Mooncake.Stack{Tuple{Mooncake.var"#sum_pb!!#rrule!!##128"{Float64, Vector{Float64}}}}
+-  │   %2  =   dynamic (Mooncake.get_shared_data_field)(_1, 2)::Any
++  2 ──       goto #3
+-  │   %3  =   dynamic (Mooncake.get_shared_data_field)(_1, 3)::Any
++  3 ── %3  =   builtin Base.getfield(%1, :position)::Int64
+-  │   %4  = %new(Base.RefValue{Mooncake.NoRData}, $(QuoteNode(Mooncake.NoRData())))::Any
++  │    %4  =   builtin Base.getfield(%1, :memory)::Vector{Tuple{Mooncake.var"#sum_pb!!#rrule!!##128"{Float64, Vector{Float64}}}}
+-  │   %5  = %new(Base.RefValue{Tuple{Float64, Mooncake.NoRData}}, $(QuoteNode((0.0, Mooncake.NoRData()))))::Any
++  │    %5  = $(Expr(:boundscheck, false))::Bool
+-  │         %new(Base.RefValue{Mooncake.NoRData}, $(QuoteNode(Mooncake.NoRData())))::Any
++  └───       goto #7 if not %5
+-  │   %7  = %new(Base.RefValue{Float64}, $(QuoteNode(0.0)))::Any
++  4 ── %7  = intrinsic Base.sub_int(%3, 1)::Int64
+-  │         %new(Base.RefValue{Mooncake.NoRData}, $(QuoteNode(Mooncake.NoRData())))::Any
++  │    %8  = intrinsic Base.bitcast(Base.UInt, %7)::UInt64
+-  │   %9  = %new(Base.RefValue{Float64}, $(QuoteNode(0.0)))::Any
++  │    %9  =   builtin Base.getfield(%4, :size)::Tuple{Int64}
+-  │   %10 = %new(Base.RefValue{Float64}, $(QuoteNode(0.0)))::Any
++  │    %10 = $(Expr(:boundscheck, true))::Bool
+-  │   %11 = %new(Base.RefValue{Mooncake.NoRData}, $(QuoteNode(Mooncake.NoRData())))::Any
++  │    %11 =   builtin Base.getfield(%9, 1, %10)::Int64
+-  │         %new(Base.RefValue{Any}, $(QuoteNode(Mooncake.ZeroRData())))::Any
++  │    %12 = intrinsic Base.bitcast(Base.UInt, %11)::UInt64
+-  └──       $(QuoteNode(Mooncake.BasicBlockCode.ID(7)))
++  │    %13 = intrinsic Base.ult_int(%8, %12)::Bool
+-  2 ─       goto #3
++  └───       goto #6 if not %13
+-  3 ─ %15 =   dynamic (pop!)(%3)::Any
++  5 ──       goto #7
+-  │   %16 =   builtin (getfield)(%15, 1)::Any
++  6 ── %16 =   builtin Core.tuple(%3)::Tuple{Int64}
+-  │   %17 =   builtin (getfield)(%10, :x)::Any
++  │             invoke Base.throw_boundserror(%4::Vector{Tuple{Mooncake.var"#sum_pb!!#rrule!!##128"{Float64, Vector{Float64}}}}, %16::Tuple{Int64})::Union{}
+-  │   %18 =   dynamic (Mooncake.increment!!)(%17, _2)::Any
++  └───       unreachable
+-  │           builtin (setfield!)(%10, :x, %18)::Any
++  7 ┄─ %19 =   builtin Base.getfield(%4, :ref)::MemoryRef{Tuple{Mooncake.var"#sum_pb!!#rrule!!##128"{Float64, Vector{Float64}}}}
+-  │   %20 =   builtin (getfield)(%10, :x)::Any
++  │    %20 =   builtin Base.memoryrefnew(%19, %3, false)::MemoryRef{Tuple{Mooncake.var"#sum_pb!!#rrule!!##128"{Float64, Vector{Float64}}}}
+-  │           builtin (setfield!)(%10, :x, 0.0)::Any
++  │    %21 =   builtin Base.memoryrefget(%20, :not_atomic, false)::Tuple{Mooncake.var"#sum_pb!!#rrule!!##128"{Float64, Vector{Float64}}}
+-  │   %22 =   dynamic (Mooncake.IntrinsicsWrappers.var"#add_float_pb!!#rrule!!##1"())(%20)::Any
++  └───       goto #8
+-  │   %23 =   builtin (getfield)(%22, 2)::Any
++  8 ── %23 = intrinsic Base.sub_int(%3, 1)::Int64
+-  │   %24 =   builtin (getfield)(%7, :x)::Any
++  │            builtin Base.setfield!(%1, :position, %23)::Int64
+-  │   %25 =   dynamic (Mooncake.increment!!)(%24, %23)::Any
++  └───       goto #9
+-  │           builtin (setfield!)(%7, :x, %25)::Any
++  9 ── %26 =   builtin (getfield)(%21, 1)::Mooncake.var"#sum_pb!!#rrule!!##128"{Float64, Vector{Float64}}
+-  │   %27 =   builtin (getfield)(%22, 3)::Any
++  │    %27 = intrinsic Base.add_float($(QuoteNode(0.0)), _2)::Float64
+-  │   %28 =   builtin (getfield)(%9, :x)::Any
++  │    %28 = intrinsic Base.add_float($(QuoteNode(0.0)), %27)::Float64
+-  │   %29 =   dynamic (Mooncake.increment!!)(%28, %27)::Any
++  │    %29 = intrinsic Base.add_float($(QuoteNode(0.0)), %27)::Float64
+-  │           builtin (setfield!)(%9, :x, %29)::Any
++  │             invoke %26(%29::Float64)::Core.Const((Mooncake.NoRData(), Mooncake.NoRData()))
+-  │   %31 =   builtin (getfield)(%9, :x)::Any
++  │    %31 = $(Expr(:boundscheck, true))::Bool
+-  │           builtin (setfield!)(%9, :x, 0.0)::Any
++  │    %32 =   builtin Base.getfield($(QuoteNode((0.0, Mooncake.NoRData()))), 1, %31)::Float64
+-  │   %33 =   dynamic (%16)(%31)::Any
++  │    %33 = intrinsic Base.add_float(%32, 0.0)::Float64
+-  │   %34 =   builtin (getfield)(%33, 2)::Any
++  │    %34 =   builtin Mooncake.tuple(%33, $(QuoteNode(Mooncake.NoRData())))::Tuple{Float64, Mooncake.NoRData}
+-  │   %35 =   builtin (getfield)(%11, :x)::Any
++  │    %35 = intrinsic Base.add_float(0.0, %28)::Float64
+-  │   %36 =   dynamic (Mooncake.increment!!)(%35, %34)::Any
++  │    %36 = $(Expr(:boundscheck, true))::Bool
+-  │           builtin (setfield!)(%11, :x, %36)::Any
++  │    %37 =   builtin Base.getfield(%34, 1, %36)::Float64
+-  │   %38 =   builtin (getfield)(%11, :x)::Any
++  │    %38 = intrinsic Base.add_float(%37, %35)::Float64
+-  │           builtin (setfield!)(%11, :x, Mooncake.NoRData())::Any
++  └─── %39 =   builtin Mooncake.tuple(%38, $(QuoteNode(Mooncake.NoRData())))::Tuple{Float64, Mooncake.NoRData}
+-  │   %40 =   dynamic (Mooncake.var"#immutable_lgetfield_pb!!#rrule!!##77"{2, Mooncake.LazyZeroRData{Tuple{Float64, Vector{Float64}}, Nothing}}(Mooncake.LazyZeroRData{Tuple{Float64, Vector{Float64}}, Nothing}(nothing)))(%38)::Any
++  10 ─       goto #11
+-  │   %41 =   builtin (getfield)(%40, 2)::Any
++  11 ─ %41 = $(Expr(:boundscheck, true))::Bool
+-  │   %42 =   builtin (getfield)(%5, :x)::Any
++  │    %42 =   builtin Base.getfield(%39, 1, %41)::Float64
+-  │   %43 =   dynamic (Mooncake.increment!!)(%42, %41)::Any
++  │    %43 = intrinsic Base.add_float(%42, 0.0)::Float64
+-  │           builtin (setfield!)(%5, :x, %43)::Any
++  │    %44 =   builtin Mooncake.tuple(%43, $(QuoteNode(Mooncake.NoRData())))::Tuple{Float64, Mooncake.NoRData}
+-  │         nothing::Any
++  │    %45 =   builtin (tuple)($(QuoteNode(Mooncake.NoRData())), %44)::Tuple{Mooncake.NoRData, Tuple{Float64, Mooncake.NoRData}}
+-  │   %46 =   builtin (getfield)(%7, :x)::Any
++  └───       return %45
+-  │           builtin (setfield!)(%7, :x, 0.0)::Any
++  
+-  │   %48 =   dynamic (Mooncake.var"#immutable_lgetfield_pb!!#rrule!!##77"{1, Mooncake.LazyZeroRData{Tuple{Float64, Vector{Float64}}, Nothing}}(Mooncake.LazyZeroRData{Tuple{Float64, Vector{Float64}}, Nothing}(nothing)))(%46)::Any
+-  │   %49 =   builtin (getfield)(%48, 2)::Any
+-  │   %50 =   builtin (getfield)(%5, :x)::Any
+-  │   %51 =   dynamic (Mooncake.increment!!)(%50, %49)::Any
+-  │           builtin (setfield!)(%5, :x, %51)::Any
+-  │         nothing::Any
+-  └──       $(QuoteNode(Mooncake.BasicBlockCode.ID(9)))
+-  4 ─       goto #5
+-  5 ─ %56 =   dynamic (getindex)(%2)::Any
+-  │   %57 =   builtin (getfield)(%4, :x)::Any
+-  │   %58 =   builtin (getfield)(%56, 1)::Any
+-  │   %59 =   dynamic (Mooncake.instantiate)(%58)::Any
+-  │   %60 =   dynamic (Mooncake.increment!!)(%57, %59)::Any
+-  │   %61 =   builtin (getfield)(%5, :x)::Any
+-  │   %62 =   builtin (getfield)(%56, 2)::Any
+-  │   %63 =   dynamic (Mooncake.instantiate)(%62)::Any
+-  │   %64 =   dynamic (Mooncake.increment!!)(%61, %63)::Any
+-  │   %65 =   builtin (tuple)(%60, %64)::Any
+-  │   %66 =   builtin (typeassert)(%65, Tuple{Mooncake.NoRData, Tuple{Float64, Mooncake.NoRData}})::Any
+-  └──       return %66
+-  
+

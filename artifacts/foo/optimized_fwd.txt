@@ -1,0 +1,149 @@
+9 1 ── %1   =   builtin Mooncake.getfield(_1, 2)::Base.RefValue{Tuple{Mooncake.LazyZeroRData{typeof(foo), Nothing}, Mooncake.LazyZeroRData{Tuple{Float64, Vector{Float64}}, Nothing}}}
+  │    %2   =   builtin Mooncake.getfield(_1, 3)::Mooncake.Stack{Tuple{Mooncake.var"#sum_pb!!#rrule!!##128"{Float64, Vector{Float64}}}}
+  └───          builtin Base.setfield!(%1, :x, (Mooncake.LazyZeroRData{typeof(foo), Nothing}(nothing), Mooncake.LazyZeroRData{Tuple{Float64, Vector{Float64}}, Nothing}(nothing)))::Tuple{Mooncake.LazyZeroRData{typeof(foo), Nothing}, Mooncake.LazyZeroRData{Tuple{Float64, Vector{Float64}}, Nothing}}
+  2 ── %4   =   builtin Base.getfield(_3, :x)::Tuple{Float64, Vector{Float64}}
+  │    %5   =   builtin Mooncake.getfield(%4, 1, true)::Float64
+  │    %6   =   builtin Base.getfield(_3, :x)::Tuple{Float64, Vector{Float64}}
+  │    %7   =   builtin Mooncake.getfield(%6, 2, true)::Vector{Float64}
+  │    %8   =   builtin Base.getfield(_3, :dx)::Tuple{Mooncake.NoFData, Vector{Float64}}
+  │    %9   =   builtin Mooncake.getfield(%8, 2)::Vector{Float64}
+  │    %10  = %new(Mooncake.var"#sum_pb!!#rrule!!##128"{Float64, Vector{Float64}}, %9)::Mooncake.var"#sum_pb!!#rrule!!##128"{Float64, Vector{Float64}}
+  │    %11  =   builtin Base.getfield(%7, :size)::Tuple{Int64}
+  │    %12  = $(Expr(:boundscheck, true))::Bool
+  │    %13  =   builtin Base.getfield(%11, 1, %12)::Int64
+  │    %14  =   builtin (%13 === 0)::Bool
+  └───        goto #4 if not %14
+  3 ──        goto #32
+  4 ── %17  =   builtin (%13 === 1)::Bool
+  └───        goto #11 if not %17
+  5 ── %19  = $(Expr(:boundscheck, false))::Bool
+  └───        goto #9 if not %19
+  6 ── %21  = intrinsic Base.sub_int(1, 1)::Int64
+  │    %22  = intrinsic Base.bitcast(Base.UInt, %21)::UInt64
+  │    %23  =   builtin Base.getfield(%7, :size)::Tuple{Int64}
+  │    %24  = $(Expr(:boundscheck, true))::Bool
+  │    %25  =   builtin Base.getfield(%23, 1, %24)::Int64
+  │    %26  = intrinsic Base.bitcast(Base.UInt, %25)::UInt64
+  │    %27  = intrinsic Base.ult_int(%22, %26)::Bool
+  └───        goto #8 if not %27
+  7 ──        goto #9
+  8 ── %30  =   builtin Core.tuple(1)::Tuple{Int64}
+  │              invoke Base.throw_boundserror(%7::Vector{Float64}, %30::Tuple{Int64})::Union{}
+  └───        unreachable
+  9 ┄─ %33  =   builtin Base.getfield(%7, :ref)::MemoryRef{Float64}
+  │    %34  =   builtin Base.memoryrefnew(%33, 1, false)::MemoryRef{Float64}
+  │    %35  =   builtin Base.memoryrefget(%34, :not_atomic, false)::Float64
+  └───        goto #10
+  10 ─        goto #32
+  11 ─ %38  = intrinsic Base.slt_int(%13, 16)::Bool
+  └───        goto #31 if not %38
+  12 ─ %40  = $(Expr(:boundscheck, false))::Bool
+  └───        goto #16 if not %40
+  13 ─ %42  = intrinsic Base.sub_int(1, 1)::Int64
+  │    %43  = intrinsic Base.bitcast(Base.UInt, %42)::UInt64
+  │    %44  =   builtin Base.getfield(%7, :size)::Tuple{Int64}
+  │    %45  = $(Expr(:boundscheck, true))::Bool
+  │    %46  =   builtin Base.getfield(%44, 1, %45)::Int64
+  │    %47  = intrinsic Base.bitcast(Base.UInt, %46)::UInt64
+  │    %48  = intrinsic Base.ult_int(%43, %47)::Bool
+  └───        goto #15 if not %48
+  14 ─        goto #16
+  15 ─ %51  =   builtin Core.tuple(1)::Tuple{Int64}
+  │              invoke Base.throw_boundserror(%7::Vector{Float64}, %51::Tuple{Int64})::Union{}
+  └───        unreachable
+  16 ┄ %54  =   builtin Base.getfield(%7, :ref)::MemoryRef{Float64}
+  │    %55  =   builtin Base.memoryrefnew(%54, 1, false)::MemoryRef{Float64}
+  │    %56  =   builtin Base.memoryrefget(%55, :not_atomic, false)::Float64
+  └───        goto #17
+  17 ─ %58  = $(Expr(:boundscheck, false))::Bool
+  └───        goto #21 if not %58
+  18 ─ %60  = intrinsic Base.sub_int(2, 1)::Int64
+  │    %61  = intrinsic Base.bitcast(Base.UInt, %60)::UInt64
+  │    %62  =   builtin Base.getfield(%7, :size)::Tuple{Int64}
+  │    %63  = $(Expr(:boundscheck, true))::Bool
+  │    %64  =   builtin Base.getfield(%62, 1, %63)::Int64
+  │    %65  = intrinsic Base.bitcast(Base.UInt, %64)::UInt64
+  │    %66  = intrinsic Base.ult_int(%61, %65)::Bool
+  └───        goto #20 if not %66
+  19 ─        goto #21
+  20 ─ %69  =   builtin Core.tuple(2)::Tuple{Int64}
+  │              invoke Base.throw_boundserror(%7::Vector{Float64}, %69::Tuple{Int64})::Union{}
+  └───        unreachable
+  21 ┄ %72  =   builtin Base.getfield(%7, :ref)::MemoryRef{Float64}
+  │    %73  =   builtin Base.memoryrefnew(%72, 2, false)::MemoryRef{Float64}
+  │    %74  =   builtin Base.memoryrefget(%73, :not_atomic, false)::Float64
+  └───        goto #22
+  22 ─ %76  = intrinsic Base.add_float(%56, %74)::Float64
+  23 ┄ %77  = φ (#22 => %76, #29 => %100)::Float64
+  │    %78  = φ (#22 => 2, #29 => %81)::Int64
+  │    %79  = intrinsic Base.slt_int(%78, %13)::Bool
+  └───        goto #30 if not %79
+  24 ─ %81  = intrinsic Base.add_int(%78, 1)::Int64
+  │    %82  = $(Expr(:boundscheck, false))::Bool
+  └───        goto #28 if not %82
+  25 ─ %84  = intrinsic Base.sub_int(%81, 1)::Int64
+  │    %85  = intrinsic Base.bitcast(Base.UInt, %84)::UInt64
+  │    %86  =   builtin Base.getfield(%7, :size)::Tuple{Int64}
+  │    %87  = $(Expr(:boundscheck, true))::Bool
+  │    %88  =   builtin Base.getfield(%86, 1, %87)::Int64
+  │    %89  = intrinsic Base.bitcast(Base.UInt, %88)::UInt64
+  │    %90  = intrinsic Base.ult_int(%85, %89)::Bool
+  └───        goto #27 if not %90
+  26 ─        goto #28
+  27 ─ %93  =   builtin Core.tuple(%81)::Tuple{Int64}
+  │              invoke Base.throw_boundserror(%7::Vector{Float64}, %93::Tuple{Int64})::Union{}
+  └───        unreachable
+  28 ┄ %96  =   builtin Base.getfield(%7, :ref)::MemoryRef{Float64}
+  │    %97  =   builtin Base.memoryrefnew(%96, %81, false)::MemoryRef{Float64}
+  │    %98  =   builtin Base.memoryrefget(%97, :not_atomic, false)::Float64
+  └───        goto #29
+  29 ─ %100 = intrinsic Base.add_float(%77, %98)::Float64
+  └───        goto #23
+  30 ─        goto #32
+  31 ─ %103 =    invoke Base.mapreduce_impl(Mooncake.identity::typeof(identity), Base.add_sum::typeof(Base.add_sum), %7::Vector{Float64}, 1::Int64, %13::Int64, 1024::Int64)::Float64
+  └───        goto #32
+  32 ┄ %105 = φ (#3 => 0.0, #10 => %35, #30 => %77, #31 => %103)::Float64
+  └───        goto #33
+  33 ─        goto #34
+  34 ─        goto #35
+  35 ─        goto #36
+  36 ─        goto #37
+  37 ─        goto #38
+  38 ─        goto #39
+  39 ─        goto #40
+  40 ─ %114 = intrinsic (Core.Intrinsics.add_float)(%5, %105)::Float64
+  │    %115 = %new(Mooncake.CoDual{Float64, Mooncake.NoFData}, %114, $(QuoteNode(Mooncake.NoFData())))::Mooncake.CoDual{Float64, Mooncake.NoFData}
+  │    %116 =   builtin (tuple)(%10)::Tuple{Mooncake.var"#sum_pb!!#rrule!!##128"{Float64, Vector{Float64}}}
+  │    %117 =   builtin Base.getfield(%2, :position)::Int64
+  │    %118 = intrinsic Base.add_int(%117, 1)::Int64
+  │    %119 =   builtin Base.getfield(%2, :memory)::Vector{Tuple{Mooncake.var"#sum_pb!!#rrule!!##128"{Float64, Vector{Float64}}}}
+  │             builtin Base.setfield!(%2, :position, %118)::Int64
+  │    %121 =   builtin Base.getfield(%119, :size)::Tuple{Int64}
+  │    %122 = $(Expr(:boundscheck, true))::Bool
+  │    %123 =   builtin Base.getfield(%121, 1, %122)::Int64
+  │    %124 = intrinsic Base.sle_int(%118, %123)::Bool
+  └───        goto #48 if not %124
+  41 ─ %126 = $(Expr(:boundscheck, false))::Bool
+  └───        goto #45 if not %126
+  42 ─ %128 = intrinsic Base.sub_int(%118, 1)::Int64
+  │    %129 = intrinsic Base.bitcast(UInt64, %128)::UInt64
+  │    %130 =   builtin Base.getfield(%119, :size)::Tuple{Int64}
+  │    %131 = $(Expr(:boundscheck, true))::Bool
+  │    %132 =   builtin Base.getfield(%130, 1, %131)::Int64
+  │    %133 = intrinsic Base.bitcast(UInt64, %132)::UInt64
+  │    %134 = intrinsic Base.ult_int(%129, %133)::Bool
+  └───        goto #44 if not %134
+  43 ─        goto #45
+  44 ─ %137 =   builtin Core.tuple(%118)::Tuple{Int64}
+  │              invoke Base.throw_boundserror(%119::Vector{Tuple{Mooncake.var"#sum_pb!!#rrule!!##128"{Float64, Vector{Float64}}}}, %137::Tuple{Int64})::Union{}
+  └───        unreachable
+  45 ┄ %140 =   builtin Base.getfield(%119, :ref)::MemoryRef{Tuple{Mooncake.var"#sum_pb!!#rrule!!##128"{Float64, Vector{Float64}}}}
+  │    %141 =   builtin Base.memoryrefnew(%140, %118, false)::MemoryRef{Tuple{Mooncake.var"#sum_pb!!#rrule!!##128"{Float64, Vector{Float64}}}}
+  │             builtin Base.memoryrefset!(%141, %116, :not_atomic, false)::Tuple{Mooncake.var"#sum_pb!!#rrule!!##128"{Float64, Vector{Float64}}}
+  └───        goto #46
+  46 ─        goto #47
+  47 ─        goto #49
+  48 ─           invoke Mooncake.push!(%119::Vector{Tuple{Mooncake.var"#sum_pb!!#rrule!!##128"{Float64, Vector{Float64}}}}, %116::Tuple{Mooncake.var"#sum_pb!!#rrule!!##128"{Float64, Vector{Float64}}})::Vector{Tuple{Mooncake.var"#sum_pb!!#rrule!!##128"{Float64, Vector{Float64}}}}
+  49 ┄        goto #50
+  50 ─        return %115
+  

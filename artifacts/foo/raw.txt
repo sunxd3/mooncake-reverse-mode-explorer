@@ -1,0 +1,8 @@
+9 1 ─ %1 = $(Expr(:boundscheck, true))::Bool
+  │   %2 =   builtin Base.getfield(_2, 1, %1)::Float64
+  │   %3 = $(Expr(:boundscheck, true))::Bool
+  │   %4 =   builtin Base.getfield(_2, 2, %3)::Vector{Float64}
+  │   %5 = dynamic invoke Main.sum(%4::Vector{Float64})::Float64
+  │   %6 = intrinsic Base.add_float(%2, %5)::Float64
+  └──      return %6
+  

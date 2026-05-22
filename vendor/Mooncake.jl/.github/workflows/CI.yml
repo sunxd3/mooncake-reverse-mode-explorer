@@ -1,0 +1,210 @@
+name: CI
+on:
+  push:
+    branches:
+      - main
+    tags: ['*']
+  pull_request:
+  schedule:
+    - cron:  '28 0,6,12,18 * * *'
+concurrency:
+  # Skip intermediate builds: always.
+  # Cancel intermediate builds: only if it is a pull request build.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
+  
+permissions:
+  contents: write
+  pull-requests: write
+  
+jobs:
+  test:
+    name: ${{ matrix.test_group }}-${{ matrix.version }}-${{ matrix.arch }}
+    runs-on: ubuntu-latest
+    if: github.event_name != 'schedule'
+    strategy:
+      fail-fast: false
+      matrix:
+        test_group: [
+          'basic',
+          'rules/avoiding_non_differentiable_code',
+          'rules/blas_Float64',
+          'rules/blas_Float32',
+          'rules/blas_ComplexF64',
+          'rules/blas_ComplexF32',
+          'rules/builtins',
+          'rules/complex',
+          'rules/dispatch_doctor',
+          'rules/fastmath',
+          'rules/foreigncall',
+          'rules/iddict',
+          'rules/lapack',
+          'rules/linear_algebra',
+          'rules/low_level_maths',
+          'rules/memory',
+          'rules/misc',
+          'rules/misty_closures',
+          'rules/new',
+          'rules/random',
+          'rules/tasks',
+          'rules/twice_precision',
+          'rules/performance_patches',
+          'rules/high_order_derivative_patches',
+        ]
+        version:
+          - 'lts'
+          - '1.12'
+        arch:
+          - x64
+        include:
+          - test_group: 'basic'
+            version: 'lts'
+            arch: x86
+          - test_group: 'rules/array_legacy'
+            version: 'lts'
+            arch: x64
+    steps:
+      - uses: actions/checkout@v6
+      - uses: julia-actions/setup-julia@v3
+        with:
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
+          include-all-prereleases: false
+      - uses: julia-actions/cache@v3
+      - uses: julia-actions/julia-buildpkg@v1
+      - uses: julia-actions/julia-runtest@v1
+        env:
+          TEST_GROUP: ${{ matrix.test_group }}
+      - uses: julia-actions/julia-processcoverage@v1
+      - uses: codecov/codecov-action@v6
+        with:
+          files: lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+  extra:
+    name: ${{matrix.test_group.test_type}}-${{ matrix.test_group.label }}-${{ matrix.version }}-${{ matrix.arch }}
+    runs-on: ubuntu-latest
+    if: github.event_name != 'schedule'
+    strategy:
+      fail-fast: false
+      matrix:
+        test_group: [
+          # {test_type: 'ext', label: 'differentiation_interface'},
+          {test_type: 'ext', label: 'dynamic_expressions'},
+          {test_type: 'ext', label: 'flux'},
+          {test_type: 'ext', label: 'function_wrappers'},
+          {test_type: 'ext', label: 'luxlib'},
+          {test_type: 'ext', label: 'nnlib'},
+          {test_type: 'ext', label: 'bfloat16s'},
+          {test_type: 'ext', label: 'special_functions'},
+          {test_type: 'integration_testing', label: 'array'},
+          {test_type: 'integration_testing', label: 'bijectors'},
+          {test_type: 'integration_testing', label: 'diff_tests'},
+          # {test_type: 'integration_testing', label: 'diffeq'},
+          {test_type: 'integration_testing', label: 'dispatch_doctor'},
+          {test_type: 'integration_testing', label: 'distributions'},
+          # {test_type: 'integration_testing', label: 'dynamicppl'},
+          {test_type: 'integration_testing', label: 'gp'},
+          {test_type: 'integration_testing', label: 'logexpfunctions'},
+          {test_type: 'integration_testing', label: 'battery_tests'},
+          {test_type: 'integration_testing', label: 'misc_abstract_array'},
+          {test_type: 'integration_testing', label: 'temporalgps'},
+        ]
+        version:
+          - 'lts'
+          - '1.12'
+        arch:
+          - x64
+        include:
+          - test_group: { test_type: 'integration_testing', label: 'format' }
+            version: 'lts'
+            arch: x64
+    steps:
+      - uses: actions/checkout@v6
+      - uses: julia-actions/setup-julia@v3
+        with:
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
+          include-all-prereleases: false
+      - uses: julia-actions/cache@v3
+      - uses: julia-actions/julia-buildpkg@v1
+      - run: |
+          if [ ${{ matrix.test_group.test_type }} == 'ext' ]; then
+            julia --code-coverage=user --eval 'include("test/run_extra.jl")'
+          else
+            julia --eval 'include("test/run_extra.jl")'
+          fi
+        env:
+          LABEL: ${{ matrix.test_group.label }}
+          TEST_TYPE: ${{ matrix.test_group.test_type }}
+      - uses: julia-actions/julia-processcoverage@v1
+      - uses: codecov/codecov-action@v6
+        with:
+          files: lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+  perf:
+    name: "Performance (${{ matrix.perf_group }})"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        perf_group:
+          - 'hand_written'
+          - 'derived'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: julia-actions/setup-julia@v3
+        with:
+          version: '1.12'
+          arch: x64
+          include-all-prereleases: false
+      - uses: julia-actions/cache@v3
+      - uses: julia-actions/julia-buildpkg@v1
+      - run: julia --project=bench --eval 'include("bench/run_benchmarks.jl"); main()'
+        env:
+          PERF_GROUP: ${{ matrix.perf_group }}
+        shell: bash
+  compperf:
+    name: "Performance (inter-AD)"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v6
+      - uses: julia-actions/setup-julia@v3
+        with:
+          version: '1.12'
+          arch: x64
+          include-all-prereleases: false
+      - uses: julia-actions/cache@v3
+      - uses: julia-actions/julia-buildpkg@v1
+      - run: mkdir bench_results
+      - run: julia --project=bench --eval 'include("bench/run_benchmarks.jl"); main()'
+        env:
+          PERF_GROUP: 'comparison'
+          GKSwstype: '100'
+        shell: bash
+      - uses: actions/upload-artifact@v7
+        with:
+          name: benchmarking-results
+          path: bench_results/
+      - name: Read file content
+        id: read-file
+        run: |
+          {
+            echo "table<<EOF"
+            cat bench/benchmark_results.txt
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+      - name: Sync PR summary
+        uses: TuringLang/actions/SyncPRSummary@main
+        with:
+          perf-content: |
+            Performance Ratio:
+            Ratio of time to compute gradient and time to compute function.
+            Warning: results are very approximate! See [here](https://github.com/chalk-lab/Mooncake.jl/tree/main/bench#inter-framework-benchmarking) for more context.
+            ```
+            ${{ steps.read-file.outputs.table }}
+            ```
