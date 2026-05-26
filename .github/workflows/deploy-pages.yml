@@ -38,7 +38,7 @@ jobs:
 
       - name: Build (with GH Pages base path)
         env:
-          BASE_PATH: /mooncake-explorer/
+          BASE_PATH: /mooncake-reverse-mode-explorer/
         run: npm run build
 
       - uses: actions/configure-pages@v5
