@@ -1,13 +1,13 @@
 {
-  "name": "mooncake-walkthrough",
+  "name": "mooncake-explorer",
   "private": true,
   "version": "0.1.0",
-  "description": "Static walkthrough of Mooncake's real reverse-mode AD IR",
+  "description": "Interactive explorer for Mooncake's reverse-mode AD IR",
   "scripts": {
-    "setup": "julia --project=MooncakeWalkthrough -e 'using Pkg; Pkg.instantiate()' && npm install --prefix web",
+    "setup": "julia --project=MooncakeTracer -e 'using Pkg; Pkg.instantiate()' && npm install --prefix web",
     "dev": "npm --prefix web run dev",
     "build": "npm --prefix web run build",
-    "bake": "julia --project=MooncakeWalkthrough -e 'using MooncakeWalkthrough; MooncakeWalkthrough.bake()'",
-    "test": "julia --project=MooncakeWalkthrough -e 'using Pkg; Pkg.test()'"
+    "bake": "julia --project=MooncakeTracer -e 'using MooncakeTracer; MooncakeTracer.bake()'",
+    "test": "julia --project=MooncakeTracer -e 'using Pkg; Pkg.test()'"
   }
 }

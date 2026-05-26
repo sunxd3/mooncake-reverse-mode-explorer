@@ -28,10 +28,10 @@ export function App() {
       <header className="flex items-center justify-between border-b border-border bg-surface-1 px-4 py-2.5">
         <div className="flex items-baseline gap-3">
           <h1 className="text-sm font-semibold text-ink">
-            Mooncake Reverse-Mode Walkthrough
+            Mooncake Reverse-Mode Explorer
           </h1>
           <span className="text-xs text-ink-3">
-            stepping real Mooncake AD IR
+            stepping Mooncake AD IR
           </span>
           {dbg.loadedLabel && (
             <span className="truncate text-[11px] text-ink-3" title={dbg.loadedLabel}>

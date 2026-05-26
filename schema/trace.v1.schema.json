@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/sunxd3/mooncake-walkthrough/schema/trace.v1.schema.json",
-  "title": "Mooncake walkthrough trace",
+  "$id": "https://github.com/sunxd3/mooncake-explorer/schema/trace.v1.schema.json",
+  "title": "Mooncake AD trace",
   "description": "An event-stream trace of one Mooncake reverse-mode AD run. Schema version 1.",
   "type": "object",
   "required": [

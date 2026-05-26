@@ -1,5 +1,5 @@
 # Stage 1 acceptance gate: validate that the interpreter-produced trace is a
-# faithful account of Mooncake's real reverse-mode AD.
+# faithful account of Mooncake's reverse-mode AD.
 #
 # Layers (see artifacts/STAGE1_VALIDATION.md):
 #   A independent ground truth (finite differences + analytic)
@@ -10,8 +10,8 @@
 #   F input independence of the IR
 #   G seed linearity
 
-using MooncakeWalkthrough
-const MW = MooncakeWalkthrough
+using MooncakeTracer
+const MW = MooncakeTracer
 import Mooncake
 using Test
 
@@ -80,7 +80,7 @@ function fd_grad(f, build, vals; eps=1e-6)
     return g
 end
 
-@testset "Mooncake walkthrough — trace validation" begin
+@testset "MooncakeTracer — trace validation" begin
 
     # =====================================================================
     @testset "Example 1: foo  (scalar + vector)" begin

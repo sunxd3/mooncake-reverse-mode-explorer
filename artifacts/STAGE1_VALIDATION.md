@@ -1,6 +1,6 @@
 # Stage 1 Validation
 
-The walkthrough teaches from 100+ intermediate steps, so validating only the
+The explorer teaches from 100+ intermediate steps, so validating only the
 final gradient is not enough. `julia/test/validate.jl` runs **154 assertions**
 across 7 layers, over all three examples and a spread of inputs.
 

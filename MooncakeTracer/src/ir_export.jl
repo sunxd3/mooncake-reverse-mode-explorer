@@ -2,7 +2,7 @@
 
 """Strip module qualifiers that just add noise to a rendered string."""
 function strip_module_prefixes(s::AbstractString)
-    replace(s, "Main.MooncakeWalkthrough." => "", "MooncakeWalkthrough." => "",
+    replace(s, "Main.MooncakeTracer." => "", "MooncakeTracer." => "",
             "Mooncake.IntrinsicsWrappers." => "", "Mooncake.BasicBlockCode." => "",
             "Mooncake." => "", "Core.Compiler." => "", "Core." => "", "Base." => "")
 end

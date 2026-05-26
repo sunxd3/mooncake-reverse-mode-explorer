@@ -38,7 +38,7 @@ jobs:
 
       - name: Build (with GH Pages base path)
         env:
-          BASE_PATH: /mooncake-walkthrough/
+          BASE_PATH: /mooncake-explorer/
         run: npm run build
 
       - uses: actions/configure-pages@v5

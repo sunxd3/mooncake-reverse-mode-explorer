@@ -1,5 +1,5 @@
 // Mirrors /schema/trace.v1.schema.json — the canonical trace format. Keep in
-// sync. The Julia emitter (MooncakeWalkthrough/src/events.jl) implements the
+// sync. The Julia emitter (MooncakeTracer/src/events.jl) implements the
 // same spec.
 
 /** A rendered Julia value — a tagged union produced by `render.jl`. */

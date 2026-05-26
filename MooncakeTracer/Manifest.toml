@@ -204,7 +204,7 @@ version = "0.5.29"
     Static = "aedffcd0-7271-4cad-89d0-dc628f76c6d3"
     cuDNN = "02a925ec-e4fe-4b08-9a7e-0d78e3d38ccd"
 
-[[deps.MooncakeWalkthrough]]
+[[deps.MooncakeTracer]]
 deps = ["JSON3", "Mooncake"]
 path = "."
 uuid = "3ed0d117-09b1-472e-85dc-8f1e0b8d896f"

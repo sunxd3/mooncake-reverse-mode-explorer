@@ -1,14 +1,14 @@
-# Mooncake Reverse-Mode Walkthrough
+# Mooncake Reverse-Mode Explorer
 
-A static, debugger-style webpage that steps through **real
-[Mooncake.jl](https://github.com/chalk-lab/Mooncake.jl) reverse-mode AD** — the
-genuine forward- and reverse-pass `IRCode` Mooncake generates, executed one
-statement at a time.
+A static, debugger-style webpage that steps through
+[Mooncake.jl](https://github.com/chalk-lab/Mooncake.jl) reverse-mode AD — the
+forward- and reverse-pass `IRCode` Mooncake generates, executed one statement
+at a time.
 
-This is not a teaching mock-up. A small interpreter walks the actual un-inlined
-`fwd_ir` / `rvs_ir`, dispatching every call to the real Mooncake runtime
-(`rrule!!`, `increment!!`, …). The result is captured as an event-stream JSON
-trace, replayed in the browser. No Julia runs at view-time.
+A small interpreter walks the un-inlined `fwd_ir` / `rvs_ir`, dispatching every
+call to the Mooncake runtime (`rrule!!`, `increment!!`, …). The result is
+captured as an event-stream JSON trace, replayed in the browser. No Julia runs
+at view-time.
 
 ## Layout
 
@@ -16,9 +16,9 @@ trace, replayed in the browser. No Julia runs at view-time.
 schema/                                Canonical trace format spec
   trace.v1.schema.json                   JSON Schema 2020-12 — source of truth
 
-MooncakeWalkthrough/                   Build-time trace generator (Julia package)
+MooncakeTracer/                        Trace generator (Julia package)
   src/
-    MooncakeWalkthrough.jl               module entry
+    MooncakeTracer.jl                    module entry
     examples.jl · ir_export.jl
     stepper.jl · render.jl
     events.jl · replay.jl · trace.jl     emit / replay / orchestrate
@@ -56,7 +56,7 @@ The page loads the baked traces from `web/public/traces/`. No Julia involved.
 ## Regenerate traces (build-time)
 
 ```bash
-npm run bake           # runs MooncakeWalkthrough.bake() in Julia
+npm run bake           # runs MooncakeTracer.bake() in Julia
 ```
 
 Writes `manifest.json` + `trace_*.json` to `web/public/traces/` from the current
@@ -65,7 +65,7 @@ Julia code. Re-run after adding an example or upgrading Mooncake.
 ## Build & deploy
 
 ```bash
-BASE_PATH=/mooncake-walkthrough/ npm run build
+BASE_PATH=/mooncake-explorer/ npm run build
 # → web/dist/ is a fully static bundle. Drop it on any static host.
 ```
 
@@ -74,7 +74,7 @@ BASE_PATH=/mooncake-walkthrough/ npm run build
 GitHub Pages is wired up via `.github/workflows/pages.yml` — every push to
 `main` builds and deploys. One-time setup: in repo Settings → Pages, set
 **Source** to **GitHub Actions**. The site then lives at
-`https://<owner>.github.io/mooncake-walkthrough/`.
+`https://<owner>.github.io/mooncake-explorer/`.
 
 ## Use
 
@@ -99,7 +99,7 @@ GitHub Pages is wired up via `.github/workflows/pages.yml` — every push to
 ## Trace format
 
 Defined by [`schema/trace.v1.schema.json`](schema/trace.v1.schema.json) (JSON
-Schema 2020-12). The Julia emitter (`MooncakeWalkthrough/src/events.jl`) and
+Schema 2020-12). The Julia emitter (`MooncakeTracer/src/events.jl`) and
 the TypeScript replay (`web/src/lib/replay.ts`) both implement this spec by
 hand — the schema is the contract.
 
@@ -120,7 +120,7 @@ npx ajv-cli@latest validate -s schema/trace.v1.schema.json \
 npm test
 ```
 
-Runs `MooncakeWalkthrough/test/runtests.jl` via `Pkg.test()` — 157 assertions
+Runs `MooncakeTracer/test/runtests.jl` via `Pkg.test()` — 157 assertions
 across 7 layers (finite-difference ground truth, bit-exact same-IR
 OpaqueClosure equivalence, whole-pipeline agreement, mutation/restore
 invariants, cotangent fdata/rdata splitting, …). See
@@ -128,13 +128,13 @@ invariants, cotangent fdata/rdata splitting, …). See
 
 ## Adding an example
 
-1. Add an `ExampleSpec` to `MooncakeWalkthrough/src/examples.jl` — a function,
+1. Add an `ExampleSpec` to `MooncakeTracer/src/examples.jl` — a function,
    a way to build its argument and its output cotangent (seed), and defaults.
 2. `npm run bake` to regenerate the static traces + manifest.
 3. `npm run dev` to verify.
 
 ---
 
-Pinned to Mooncake `=0.5.29` via `MooncakeWalkthrough/Project.toml`.
+Pinned to Mooncake `=0.5.29` via `MooncakeTracer/Project.toml`.
 `Mooncake.primal_ir` / `fwd_ir` / `rvs_ir` are internal and not semver-stable,
 so the version is hard-pinned.
