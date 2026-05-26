@@ -20,7 +20,7 @@ function CtrlButton({
       disabled={disabled}
       className={`flex h-8 items-center justify-center rounded-md px-2.5 transition-colors disabled:opacity-40 ${
         primary
-          ? "bg-accent text-white hover:bg-indigo-700"
+          ? "bg-accent text-white hover:bg-accent-hover"
           : "bg-surface-2 text-ink-2 hover:bg-surface-3"
       }`}
     >

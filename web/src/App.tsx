@@ -28,9 +28,6 @@ export function App() {
           <h1 className="text-sm font-semibold text-ink">
             Mooncake Reverse-Mode Explorer
           </h1>
-          <span className="text-xs text-ink-3">
-            stepping Mooncake AD IR
-          </span>
           {dbg.loadedLabel && (
             <span className="truncate text-[11px] text-ink-3" title={dbg.loadedLabel}>
               loaded: {dbg.loadedLabel}

@@ -30,6 +30,15 @@ vpair(x::Vector{Float64}) = (copy(x), sum(x))
 # --- Example 4: value-dependent control flow (teaches the block stack) -------
 branchy(x::Float64) = x > 0 ? x * x : sin(x)
 
+# --- Example 5: compact multi-line numerical kernel -------------------------
+function mini_objective(x::Tuple{Float64,Float64})
+    a, b = x
+    residual = a * b + sin(a)
+    scale = 1.0 / (1.0 + b * b)
+    penalty = 0.1 * a * a
+    return residual * scale + penalty
+end
+
 """Pad with `1.0` / truncate `v` to length `n` — keeps a cotangent vector
 consistent with the input vector length."""
 function fit_vector(v::Vector{Float64}, n::Int)
@@ -139,6 +148,39 @@ const EXAMPLES = ExampleSpec[
         inp -> Float64(inp["x"]),
         NamedTuple[(name="x", kind="scalar", label="x (scalar)")],
         Dict{String,Any}("x" => 2.0),
+        NamedTuple[(name="dy", kind="scalar", label="dy (output cotangent)")],
+        Dict{String,Any}("dy" => 1.0),
+        function (s, arg)
+            d = Float64(s["dy"])
+            return (d, Dict{String,Any}("dy" => d))
+        end,
+    ),
+    ExampleSpec(
+        "numerical-kernel",
+        "Small numerical kernel",
+        "A compact multi-line objective over two scalars. It keeps the trace " *
+        "readable while showing named intermediates, scalar arithmetic, sin, " *
+        "division, and a quadratic penalty.",
+        """
+        function mini_objective(x)
+            a, b = x
+            residual = a * b + sin(a)
+            scale = 1.0 / (1.0 + b * b)
+            penalty = 0.1 * a * a
+            return residual * scale + penalty
+        end
+        """,
+        mini_objective,
+        function (inp)
+            a = Float64(inp["a"])
+            b = Float64(inp["b"])
+            return (a, b)
+        end,
+        NamedTuple[
+            (name="a", kind="scalar", label="a (scalar)"),
+            (name="b", kind="scalar", label="b (scalar)"),
+        ],
+        Dict{String,Any}("a" => 1.2, "b" => -0.7),
         NamedTuple[(name="dy", kind="scalar", label="dy (output cotangent)")],
         Dict{String,Any}("dy" => 1.0),
         function (s, arg)

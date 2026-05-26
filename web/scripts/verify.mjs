@@ -127,13 +127,29 @@ try {
   const pipeline = await page.$eval("body", (b) => b.innerText);
   check("IR pipeline viewer shows stage tabs", pipeline.includes("Optimised"));
 
+  // --- numerical-kernel example: multi-line scalar numerical program ---
+  await page.click("::-p-text(Small numerical kernel)");
+  await page.waitForFunction(() => document.body.innerText.includes("mini_objective"), {
+    timeout: 30000,
+  });
+  await sleep(1200);
+  await shot("6_numerical_kernel");
+  const nk = await page.$eval("body", (b) => b.innerText);
+  check("numerical-kernel trace loaded", nk.includes("function mini_objective"));
+  check("numerical-kernel shows tuple input values", nk.includes("(1.2, -0.7)"));
+  check(
+    "numerical-kernel program card shows the argument type",
+    nk.includes("Tuple{Float64, Float64}") &&
+      !nk.includes("Tuple{typeof(mini_objective)"),
+  );
+
   // --- vector-pair example: baked trace with output-side fdata / rdata split ---
   await page.click("::-p-text(Vector + scalar output)");
   await page.waitForFunction(() => document.body.innerText.includes("vpair(x)"), {
     timeout: 30000,
   });
   await sleep(1200);
-  await shot("6_vector_pair");
+  await shot("7_vector_pair");
   const vp = await page.$eval("body", (b) => b.innerText);
   check("vector-pair trace loaded", vp.includes("vpair(x) = (copy(x), sum(x))"));
   check("vector-pair still shows tape summary", vp.includes("TAPE"));
@@ -147,7 +163,7 @@ try {
   await page.waitForSelector(pushSel, { timeout: 5000 });
   await page.click(pushSel);
   await sleep(400);
-  await shot("7_branch_stack_push");
+  await shot("8_branch_stack_push");
   const branchPush = await page.$eval("body", (b) => b.innerText);
   check("branch trace loaded", branchPush.includes("branchy(x) = x > 0 ? x * x : sin(x)"));
   check("branch push step leaves block stack s1 non-empty", branchPush.includes("s1:1"));
@@ -156,7 +172,7 @@ try {
   await page.waitForSelector(popSel, { timeout: 5000 });
   await page.click(popSel);
   await sleep(400);
-  await shot("8_branch_stack_pop");
+  await shot("9_branch_stack_pop");
   const branchPop = await page.$eval("body", (b) => b.innerText);
   check("branch reverse step pops block stack s1", branchPop.includes("s1:0"));
 

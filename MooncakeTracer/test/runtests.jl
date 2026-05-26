@@ -67,6 +67,13 @@ foo(x) = x[1] + sum(x[2])
 bump!(c::Cell) = (c.v = c.v * c.v; c.v)
 vpair(x::Vector{Float64}) = (copy(x), sum(x))
 branchy(x::Float64) = x > 0 ? x * x : sin(x)
+function mini_objective(x::Tuple{Float64,Float64})
+    a, b = x
+    residual = a * b + sin(a)
+    scale = 1.0 / (1.0 + b * b)
+    penalty = 0.1 * a * a
+    return residual * scale + penalty
+end
 
 """Central finite-difference gradient of a scalar-valued `f` over a flat list of
 scalar inputs. `build(vals)` rebuilds the argument; `f` must not be observed
@@ -239,11 +246,49 @@ end
     end
 
     # =====================================================================
+    @testset "Example 5: mini_objective  (multi-line numerical kernel)" begin
+        cases = [(1.2, -0.7), (0.0, 1.5), (-1.1, 0.25), (2.0, -2.0)]
+        for (a, b) in cases
+            arg = (a, b)
+            r = interp_ad(mini_objective, arg, 1.0)
+
+            # A — finite difference over the two scalar tuple fields
+            @test r.primal == mini_objective(arg)
+            fd = fd_grad(mini_objective, v -> (v[1], v[2]), [a, b])
+            @test isapprox(flat(r.grad), fd; rtol=1e-4, atol=1e-6)
+
+            # C — whole pipeline
+            cache = Mooncake.prepare_gradient_cache(mini_objective, arg)
+            _, vg = Mooncake.value_and_gradient!!(cache, mini_objective, arg)
+            @test isapprox(flat(r.grad), flat(vg[2]); rtol=1e-12, atol=1e-12)
+
+            # D — non-mutating: primal never moves
+            @test r.post_fwd_primal == arg
+            @test r.restored_primal == arg
+        end
+
+        # B — same-IR OpaqueClosure equivalence (bit-exact)
+        for (a, b) in [(1.2, -0.7), (-1.1, 0.25)]
+            arg = (a, b)
+            ir = interp_ad(mini_objective, arg, 1.0)
+            oc = oc_ad(mini_objective, arg, 1.0)
+            @test ir.primal === oc.primal
+            @test flat(ir.grad) == flat(oc.grad)
+        end
+
+        # G — seed linearity
+        g1 = interp_ad(mini_objective, (1.2, -0.7), 1.0).grad
+        g2 = interp_ad(mini_objective, (1.2, -0.7), -2.0).grad
+        @test isapprox(flat(g2), -2.0 .* flat(g1); rtol=1e-12)
+    end
+
+    # =====================================================================
     @testset "E: trace structural invariants" begin
         for (id, inputs) in [("scalar-vector", Dict("x1" => 2.0, "x2" => [1.0, 3.0, 5.0])),
                              ("mutation", Dict("v" => 3.0)),
                              ("vector-pair", Dict("x" => [1.0, 2.0, 3.0])),
-                             ("branch", Dict("x" => 2.0))]
+                             ("branch", Dict("x" => 2.0)),
+                             ("numerical-kernel", Dict("a" => 1.2, "b" => -0.7))]
             t = build_trace(id, inputs, Dict{String,Any}())
             steps = t["steps"]
             @test !isempty(steps)
@@ -290,6 +335,9 @@ end
                                 Dict{String,Any}())["steps"]) == 0
         @test count(s -> s["phase"] == "restore",
                     build_trace("branch", Dict("x" => 2.0),
+                                Dict{String,Any}())["steps"]) == 0
+        @test count(s -> s["phase"] == "restore",
+                    build_trace("numerical-kernel", Dict("a" => 1.2, "b" => -0.7),
                                 Dict{String,Any}())["steps"]) == 0
         @test count(s -> s["phase"] == "restore",
                     build_trace("mutation", Dict("v" => 3.0),
@@ -341,6 +389,19 @@ end
                   [i["text"] for i in br_ref["steppedStages"]["fwd_ir"]]
             @test [i["text"] for i in t["steppedStages"]["rvs_ir"]] ==
                   [i["text"] for i in br_ref["steppedStages"]["rvs_ir"]]
+        end
+
+        # numerical-kernel: straight-line IR is independent of scalar values.
+        nk_ref = build_trace("numerical-kernel", Dict("a" => 1.2, "b" => -0.7),
+                             Dict{String,Any}())
+        for (a, b) in [(0.0, 1.5), (-1.1, 0.25), (2.0, -2.0)]
+            t = build_trace("numerical-kernel", Dict("a" => a, "b" => b),
+                            Dict{String,Any}())
+            @test t["counts"] == nk_ref["counts"]
+            @test [i["text"] for i in t["steppedStages"]["fwd_ir"]] ==
+                  [i["text"] for i in nk_ref["steppedStages"]["fwd_ir"]]
+            @test [i["text"] for i in t["steppedStages"]["rvs_ir"]] ==
+                  [i["text"] for i in nk_ref["steppedStages"]["rvs_ir"]]
         end
     end
 end

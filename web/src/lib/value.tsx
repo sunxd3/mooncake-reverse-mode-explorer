@@ -105,7 +105,7 @@ export function ValueView({ value: v }: { value: RValue }): React.ReactElement {
     case "type":
       return <span className="text-sky-700">{String(v.name)}</span>;
     case "fn":
-      return <span className="text-indigo-700">{String(v.name)}</span>;
+      return <span className="text-sky-700">{String(v.name)}</span>;
     case "val":
       return (
         <span>
@@ -157,7 +157,7 @@ export function ValueView({ value: v }: { value: RValue }): React.ReactElement {
     case "ref":
       return (
         <span>
-          <span className="text-violet-700">Ref</span>
+          <span className="text-sky-700">Ref</span>
           <Punct>(</Punct>
           <ValueView value={v.value as RValue} />
           <Punct>)</Punct>
@@ -193,7 +193,7 @@ export function ValueView({ value: v }: { value: RValue }): React.ReactElement {
       const items = v.items as RValue[];
       return (
         <span>
-          <span className="text-violet-700" title="tape — a stack shared by both passes">
+          <span className="text-sky-700" title="tape — a stack shared by both passes">
             Stack
           </span>
           <Punct>[</Punct>

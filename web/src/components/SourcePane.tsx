@@ -21,8 +21,8 @@ export function SourcePane({
       <dl className="space-y-1.5 text-[11px]">
         <div className="grid grid-cols-[3.5rem_minmax(0,1fr)] gap-2">
           <dt className="text-ink-3">function</dt>
-          <dd className="overflow-x-auto rounded bg-surface-2 px-2 py-1.5 font-mono text-xs text-ink">
-            {source}
+          <dd className="overflow-x-auto rounded bg-surface-2 px-2 py-1.5 font-mono text-xs leading-snug text-ink">
+            <pre className="whitespace-pre-wrap">{source.trimEnd()}</pre>
           </dd>
         </div>
         <div className="grid grid-cols-[3.5rem_minmax(0,1fr)] gap-2">
