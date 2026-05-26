@@ -1,8 +1,13 @@
 # Example functions whose Mooncake reverse-mode AD we trace.
 #
-# Each example is differentiated by Mooncake reverse-mode AD. The IR and trace
-# depend only on the type signature (fixed per example); the numeric inputs and
-# the output seed are editable and re-run through the interpreter.
+# The IR and trace depend only on the type signature (fixed per example); the
+# numeric inputs and the output seed are editable and re-run through the
+# interpreter.
+#
+# To add an example: define the function and append an `ExampleSpec` to
+# `EXAMPLES` below — a way to build the argument from editable inputs and the
+# output cotangent from an editable seed. Then `npm run bake` to regenerate
+# `web/public/traces/`.
 
 """A mutable cell — used by the mutation example so the in-place update has a
 small, readable IR (a vector `.*=` inlines to a 600-statement loop)."""
