@@ -1,4 +1,6 @@
-// Types mirroring the JSON emitted by the Julia trace service.
+// Mirrors /schema/trace.v1.schema.json — the canonical trace format. Keep in
+// sync. The Julia emitter (MooncakeWalkthrough/src/events.jl) implements the
+// same spec.
 
 /** A rendered Julia value — a tagged union produced by `render.jl`. */
 export type RValue = { kind: string } & Record<string, unknown>;

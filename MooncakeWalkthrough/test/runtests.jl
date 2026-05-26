@@ -10,10 +10,7 @@
 #   F input independence of the IR
 #   G seed linearity
 
-import Pkg
-Pkg.activate(joinpath(@__DIR__, ".."))
-include(joinpath(@__DIR__, "..", "src", "MooncakeWalkthrough.jl"))
-using .MooncakeWalkthrough
+using MooncakeWalkthrough
 const MW = MooncakeWalkthrough
 import Mooncake
 using Test

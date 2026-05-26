@@ -2,7 +2,7 @@
 
 julia_version = "1.12.6"
 manifest_format = "2.0"
-project_hash = "55afe2f8e431024737755e395e3006a815bea782"
+project_hash = "bf5addbc81d6d007dcab096b3d79112ea903fbeb"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "bbc22a9a08a0ef6460041086d8a7b27940ed4ffd"
@@ -203,6 +203,12 @@ version = "0.5.29"
     SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
     Static = "aedffcd0-7271-4cad-89d0-dc628f76c6d3"
     cuDNN = "02a925ec-e4fe-4b08-9a7e-0d78e3d38ccd"
+
+[[deps.MooncakeWalkthrough]]
+deps = ["JSON3", "Mooncake"]
+path = "."
+uuid = "3ed0d117-09b1-472e-85dc-8f1e0b8d896f"
+version = "0.1.0"
 
 [[deps.OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]

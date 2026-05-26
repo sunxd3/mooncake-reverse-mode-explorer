@@ -9,8 +9,8 @@ const MAX_DEPTH = 6
 """Short, readable type name — strips module paths and Mooncake's gensym noise."""
 function short_type(@nospecialize(T))
     s = string(T)
-    s = replace(s, "Main.MooncakeWalkthrough." => "", "Mooncake." => "",
-                "Core.Compiler." => "", "Core." => "", "Base." => "")
+    s = replace(s, "Main.MooncakeWalkthrough." => "", "MooncakeWalkthrough." => "",
+                "Mooncake." => "", "Core.Compiler." => "", "Core." => "", "Base." => "")
     # Pull a readable token out of gensym'd closure names like #sum_pb!!#rrule!!##128
     m = match(r"#([A-Za-z_][\w!]*)", s)
     m !== nothing && (s = string(m.captures[1], occursin("{", s) ? "{…}" : ""))

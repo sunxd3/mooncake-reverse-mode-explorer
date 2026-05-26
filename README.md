@@ -13,21 +13,30 @@ trace, replayed in the browser. No Julia runs at view-time.
 ## Layout
 
 ```
-julia/      Build-time trace generator (Julia + Mooncake)
-  src/        examples · stepper · ir_export · render · trace
-  bin/        bake_static.jl — regenerates web/public/traces/*.json
-  test/       validate.jl — 157-assertion correctness suite
-web/
-  src/        React + Vite viewer · lib/replay.ts reconstructs state from events
-  public/
-    traces/   Baked manifest + per-example event-stream JSON (served as-is)
-artifacts/  IR pipeline dumps, validation notes
+schema/                                Canonical trace format spec
+  trace.v1.schema.json                   JSON Schema 2020-12 — source of truth
+
+MooncakeWalkthrough/                   Build-time trace generator (Julia package)
+  src/
+    MooncakeWalkthrough.jl               module entry
+    examples.jl · ir_export.jl
+    stepper.jl · render.jl
+    events.jl · replay.jl · trace.jl     emit / replay / orchestrate
+  test/
+    runtests.jl                          157-assertion correctness suite
+
+web/                                   React + Vite viewer
+  src/
+    lib/replay.ts                        reconstructs state from events
+  public/traces/                       Baked manifest + per-example traces
+
+artifacts/                             IR pipeline dumps, validation notes
 ```
 
 ## Prerequisites
 
 - **Node 18+** / npm (always)
-- **Julia 1.10+** (only if you want to regenerate traces or run the test suite)
+- **Julia 1.12+** (only if you want to regenerate traces or run the test suite)
 
 ## Setup
 
@@ -47,7 +56,7 @@ The page loads the baked traces from `web/public/traces/`. No Julia involved.
 ## Regenerate traces (build-time)
 
 ```bash
-npm run bake           # runs julia/bin/bake_static.jl
+npm run bake           # runs MooncakeWalkthrough.bake() in Julia
 ```
 
 Writes `manifest.json` + `trace_*.json` to `web/public/traces/` from the current
@@ -84,10 +93,21 @@ BASE_PATH=/mooncake-walkthrough/ npm run build
 
 ## Trace format
 
-`{schemaVersion: 1, steps[], initialState, events[], ...}`. Steps carry
-metadata only; the browser reconstructs per-step state by replaying events
-(`pass_start`, `ssa_define`, `mut_set`, `stack_push`, `stack_pop`,
-`step_marker`). See `web/src/types.ts` and `web/src/lib/replay.ts`.
+Defined by [`schema/trace.v1.schema.json`](schema/trace.v1.schema.json) (JSON
+Schema 2020-12). The Julia emitter (`MooncakeWalkthrough/src/events.jl`) and
+the TypeScript replay (`web/src/lib/replay.ts`) both implement this spec by
+hand — the schema is the contract.
+
+Briefly: `{schemaVersion: 1, steps[], initialState, events[], ...}`. Steps
+carry metadata only; the browser reconstructs per-step state by replaying the
+event stream (`pass_start`, `ssa_define`, `mut_set`, `stack_push`,
+`stack_pop`, `step_marker`).
+
+Validate any trace with `ajv-cli`:
+```bash
+npx ajv-cli@latest validate -s schema/trace.v1.schema.json \
+  -d 'web/public/traces/trace_*.json' --spec=draft2020 --strict=false
+```
 
 ## Validation
 
@@ -95,20 +115,21 @@ metadata only; the browser reconstructs per-step state by replaying events
 npm test
 ```
 
-Runs `julia/test/validate.jl` — 157 assertions across 7 layers (finite-difference
-ground truth, bit-exact same-IR OpaqueClosure equivalence, whole-pipeline
-agreement, mutation/restore invariants, cotangent fdata/rdata splitting, …). See
+Runs `MooncakeWalkthrough/test/runtests.jl` via `Pkg.test()` — 157 assertions
+across 7 layers (finite-difference ground truth, bit-exact same-IR
+OpaqueClosure equivalence, whole-pipeline agreement, mutation/restore
+invariants, cotangent fdata/rdata splitting, …). See
 [`artifacts/STAGE1_VALIDATION.md`](artifacts/STAGE1_VALIDATION.md).
 
 ## Adding an example
 
-1. Add an `ExampleSpec` to `julia/src/examples.jl` — a function, a way to build
-   its argument and its output cotangent (seed), and defaults.
+1. Add an `ExampleSpec` to `MooncakeWalkthrough/src/examples.jl` — a function,
+   a way to build its argument and its output cotangent (seed), and defaults.
 2. `npm run bake` to regenerate the static traces + manifest.
 3. `npm run dev` to verify.
 
 ---
 
-Pinned to Mooncake `=0.5.29` via `julia/Project.toml`. `Mooncake.primal_ir` /
-`fwd_ir` / `rvs_ir` are internal and not semver-stable, so the version is
-hard-pinned.
+Pinned to Mooncake `=0.5.29` via `MooncakeWalkthrough/Project.toml`.
+`Mooncake.primal_ir` / `fwd_ir` / `rvs_ir` are internal and not semver-stable,
+so the version is hard-pinned.

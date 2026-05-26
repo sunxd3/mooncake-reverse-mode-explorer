@@ -1,9 +1,15 @@
 # Convert `IRCode` into a flat, JSON-friendly list of instructions for display.
 
-"""Strip module qualifiers and tidy a rendered statement string."""
+"""Strip module qualifiers that just add noise to a rendered string."""
+function strip_module_prefixes(s::AbstractString)
+    replace(s, "Main.MooncakeWalkthrough." => "", "MooncakeWalkthrough." => "",
+            "Mooncake.IntrinsicsWrappers." => "", "Mooncake.BasicBlockCode." => "",
+            "Mooncake." => "", "Core.Compiler." => "", "Core." => "", "Base." => "")
+end
+
+"""Strip module qualifiers and truncate to fit a single IR-line cell."""
 function clean_text(s::AbstractString)
-    s = replace(s, "Mooncake.IntrinsicsWrappers." => "", "Mooncake.BasicBlockCode." => "",
-                "Mooncake." => "", "Core.Compiler." => "", "Core." => "", "Base." => "")
+    s = strip_module_prefixes(s)
     length(s) > 140 && (s = s[1:137] * "…")
     return s
 end

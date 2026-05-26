@@ -4,10 +4,10 @@
   "version": "0.1.0",
   "description": "Static walkthrough of Mooncake's real reverse-mode AD IR",
   "scripts": {
-    "setup": "julia julia/setup.jl && npm --prefix web install",
+    "setup": "julia --project=MooncakeWalkthrough -e 'using Pkg; Pkg.instantiate()' && npm install --prefix web",
     "dev": "npm --prefix web run dev",
     "build": "npm --prefix web run build",
-    "bake": "julia --project=julia julia/bin/bake_static.jl",
-    "test": "julia julia/test/validate.jl"
+    "bake": "julia --project=MooncakeWalkthrough -e 'using MooncakeWalkthrough; MooncakeWalkthrough.bake()'",
+    "test": "julia --project=MooncakeWalkthrough -e 'using Pkg; Pkg.test()'"
   }
 }

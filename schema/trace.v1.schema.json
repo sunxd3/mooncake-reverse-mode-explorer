@@ -1,0 +1,320 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/sunxd3/mooncake-walkthrough/schema/trace.v1.schema.json",
+  "title": "Mooncake walkthrough trace",
+  "description": "An event-stream trace of one Mooncake reverse-mode AD run. Schema version 1.",
+  "type": "object",
+  "required": [
+    "schemaVersion", "exampleId", "title", "description", "source",
+    "signature", "inputs", "seed", "cotangentSplit", "irStages",
+    "steppedStages", "steps", "initialState", "events", "counts", "result"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "exampleId":     { "type": "string" },
+    "title":         { "type": "string" },
+    "description":   { "type": "string" },
+    "source":        { "type": "string" },
+    "signature":     { "type": "string" },
+    "inputs":        { "type": "object" },
+    "seed":          { "type": "object" },
+    "cotangentSplit": { "$ref": "#/$defs/CotangentSplit" },
+    "irStages":     { "type": "array", "items": { "$ref": "#/$defs/IRStage" } },
+    "steppedStages": {
+      "type": "object",
+      "required": ["fwd_ir", "rvs_ir"],
+      "properties": {
+        "fwd_ir": { "type": "array", "items": { "$ref": "#/$defs/IRStmt" } },
+        "rvs_ir": { "type": "array", "items": { "$ref": "#/$defs/IRStmt" } }
+      }
+    },
+    "steps":        { "type": "array", "items": { "$ref": "#/$defs/TraceStep" } },
+    "initialState": { "$ref": "#/$defs/InitialState" },
+    "events":       { "type": "array", "items": { "$ref": "#/$defs/TraceEvent" } },
+    "counts": {
+      "type": "object",
+      "required": ["forward", "reverse", "total"],
+      "properties": {
+        "forward": { "type": "integer", "minimum": 0 },
+        "reverse": { "type": "integer", "minimum": 0 },
+        "total":   { "type": "integer", "minimum": 0 }
+      }
+    },
+    "result": { "$ref": "#/$defs/TraceResult" }
+  },
+
+  "$defs": {
+    "CotangentSplit": {
+      "type": "object",
+      "required": ["outputType", "output", "fdata", "rdata"],
+      "properties": {
+        "outputType": { "type": "string" },
+        "output":     { "$ref": "#/$defs/RValue" },
+        "fdata":      { "$ref": "#/$defs/RValue" },
+        "rdata":      { "$ref": "#/$defs/RValue" }
+      }
+    },
+
+    "IRStage": {
+      "type": "object",
+      "required": ["id", "title", "text", "blockCount", "instCount", "stepped"],
+      "properties": {
+        "id":         { "type": "string" },
+        "title":      { "type": "string" },
+        "text":       { "type": "string" },
+        "blockCount": { "type": "integer", "minimum": 0 },
+        "instCount":  { "type": "integer", "minimum": 0 },
+        "stepped":    { "type": "boolean" }
+      }
+    },
+
+    "IRStmt": {
+      "type": "object",
+      "required": ["index", "block", "blockStart", "ssaId", "defines",
+                   "kind", "text", "type"],
+      "properties": {
+        "index":      { "type": "integer", "minimum": 1 },
+        "block":      { "type": "integer", "minimum": 1 },
+        "blockStart": { "type": "boolean" },
+        "ssaId":      { "type": ["string", "null"] },
+        "defines":    { "type": "boolean" },
+        "kind":       { "type": "string" },
+        "text":       { "type": "string" },
+        "type":       { "type": "string" }
+      }
+    },
+
+    "TraceStep": {
+      "type": "object",
+      "required": ["index", "phase", "stage", "pc", "block", "ssaId", "kind",
+                   "text", "type", "mutatesPrimal", "explanation", "produced"],
+      "properties": {
+        "index":         { "type": "integer", "minimum": 1 },
+        "phase":         { "enum": ["forward", "reverse", "restore"] },
+        "stage":         { "enum": ["fwd_ir", "rvs_ir"] },
+        "pc":            { "type": "integer", "minimum": 1 },
+        "block":         { "type": "integer", "minimum": 1 },
+        "ssaId":         { "type": ["string", "null"] },
+        "kind":          { "type": "string" },
+        "text":          { "type": "string" },
+        "type":          { "type": "string" },
+        "mutatesPrimal": { "type": "boolean" },
+        "explanation":   { "type": "string" },
+        "produced":      { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/RValue" }] }
+      }
+    },
+
+    "InitialState": {
+      "type": "object",
+      "required": ["input", "tape"],
+      "properties": {
+        "input": { "$ref": "#/$defs/RValue" },
+        "tape":  { "type": "array", "items": { "$ref": "#/$defs/RValue" } }
+      }
+    },
+
+    "TraceCheck": {
+      "type": "object",
+      "required": ["name", "passed"],
+      "properties": {
+        "name":   { "type": "string" },
+        "passed": { "type": "boolean" },
+        "got":    { "type": "array", "items": { "type": "number" } },
+        "want":   { "type": "array", "items": { "type": "number" } },
+        "error":  { "type": "string" }
+      }
+    },
+
+    "TraceResult": {
+      "type": "object",
+      "required": ["primalValue", "gradient", "checks"],
+      "properties": {
+        "primalValue": { "$ref": "#/$defs/RValue" },
+        "gradient":    { "$ref": "#/$defs/RValue" },
+        "checks":      { "type": "array", "items": { "$ref": "#/$defs/TraceCheck" } }
+      }
+    },
+
+    "NamedValue": {
+      "type": "object",
+      "required": ["id", "role", "value"],
+      "properties": {
+        "id":    { "type": "string" },
+        "role":  { "type": "string" },
+        "value": { "$ref": "#/$defs/RValue" }
+      }
+    },
+
+    "Root": {
+      "oneOf": [
+        { "type": "object", "required": ["kind"],
+          "properties": { "kind": { "const": "input" } } },
+        { "type": "object", "required": ["kind", "index"],
+          "properties": { "kind": { "const": "arg" },
+                          "index": { "type": "integer", "minimum": 0 } } },
+        { "type": "object", "required": ["kind", "index"],
+          "properties": { "kind": { "const": "tape" },
+                          "index": { "type": "integer", "minimum": 0 } } },
+        { "type": "object", "required": ["kind", "pc"],
+          "properties": { "kind": { "const": "ssa" },
+                          "pc": { "type": "integer", "minimum": 1 } } }
+      ]
+    },
+
+    "PathComponent": {
+      "oneOf": [
+        { "type": "string" },
+        { "type": "integer", "minimum": 0 }
+      ]
+    },
+
+    "Path": { "type": "array", "items": { "$ref": "#/$defs/PathComponent" } },
+
+    "TraceEvent": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["t", "pass", "args"],
+          "properties": {
+            "t":    { "const": "pass_start" },
+            "pass": { "enum": ["forward", "reverse"] },
+            "args": { "type": "array", "items": { "$ref": "#/$defs/NamedValue" } }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["t", "pc", "value"],
+          "properties": {
+            "t":     { "const": "ssa_define" },
+            "pc":    { "type": "integer", "minimum": 1 },
+            "value": { "$ref": "#/$defs/RValue" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["t", "root", "path", "value"],
+          "properties": {
+            "t":     { "const": "mut_set" },
+            "root":  { "$ref": "#/$defs/Root" },
+            "path":  { "$ref": "#/$defs/Path" },
+            "value": { "$ref": "#/$defs/RValue" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["t", "root", "path", "value"],
+          "properties": {
+            "t":     { "const": "stack_push" },
+            "root":  { "$ref": "#/$defs/Root" },
+            "path":  { "$ref": "#/$defs/Path" },
+            "value": { "$ref": "#/$defs/RValue" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["t", "root", "path"],
+          "properties": {
+            "t":    { "const": "stack_pop" },
+            "root": { "$ref": "#/$defs/Root" },
+            "path": { "$ref": "#/$defs/Path" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["t", "stepIndex"],
+          "properties": {
+            "t":         { "const": "step_marker" },
+            "stepIndex": { "type": "integer", "minimum": 1 }
+          }
+        }
+      ]
+    },
+
+    "RValue": {
+      "description": "A rendered Julia value. Discriminated union keyed on `kind`.",
+      "oneOf": [
+        { "type": "object", "required": ["kind"],
+          "properties": { "kind": { "const": "nothing" } } },
+        { "type": "object", "required": ["kind", "value"],
+          "properties": { "kind": { "const": "bool" },
+                          "value": { "type": "boolean" } } },
+        { "type": "object", "required": ["kind", "value"],
+          "properties": { "kind":  { "const": "number" },
+                          "value": { "oneOf": [{ "type": "number" }, { "type": "string" }] },
+                          "int":   { "type": "boolean" } } },
+        { "type": "object", "required": ["kind", "value"],
+          "properties": { "kind": { "const": "string" },
+                          "value": { "type": "string" } } },
+        { "type": "object", "required": ["kind", "value"],
+          "properties": { "kind": { "const": "symbol" },
+                          "value": { "type": "string" } } },
+        { "type": "object", "required": ["kind", "name"],
+          "properties": { "kind": { "const": "type" },
+                          "name": { "type": "string" } } },
+        { "type": "object", "required": ["kind", "value"],
+          "properties": { "kind":  { "const": "val" },
+                          "value": { "$ref": "#/$defs/RValue" } } },
+        { "type": "object", "required": ["kind", "name"],
+          "properties": { "kind": { "const": "fn" },
+                          "name": { "type": "string" } } },
+        { "type": "object", "required": ["kind", "name"],
+          "properties": { "kind": { "const": "pullback" },
+                          "name": { "type": "string" } } },
+        { "type": "object", "required": ["kind", "name"],
+          "properties": { "kind": { "const": "none" },
+                          "name": { "type": "string" } } },
+        { "type": "object", "required": ["kind", "primalType", "primal", "tangent"],
+          "properties": { "kind":       { "const": "codual" },
+                          "primalType": { "type": "string" },
+                          "primal":     { "$ref": "#/$defs/RValue" },
+                          "tangent":    { "$ref": "#/$defs/RValue" } } },
+        { "type": "object", "required": ["kind", "mutable", "fields"],
+          "properties": { "kind":    { "const": "tangent" },
+                          "mutable": { "type": "boolean" },
+                          "fields":  { "type": "array", "items": { "$ref": "#/$defs/Field" } } } },
+        { "type": "object", "required": ["kind", "refType", "value"],
+          "properties": { "kind":    { "const": "ref" },
+                          "refType": { "type": "string" },
+                          "value":   { "$ref": "#/$defs/RValue" } } },
+        { "type": "object", "required": ["kind", "items"],
+          "properties": { "kind":  { "const": "tuple" },
+                          "items": { "type": "array", "items": { "$ref": "#/$defs/RValue" } } } },
+        { "type": "object", "required": ["kind", "fields"],
+          "properties": { "kind":   { "const": "namedtuple" },
+                          "fields": { "type": "array", "items": { "$ref": "#/$defs/Field" } } } },
+        { "type": "object", "required": ["kind", "items"],
+          "properties": { "kind":  { "const": "vector" },
+                          "items": { "type": "array", "items": { "$ref": "#/$defs/RValue" } } } },
+        { "type": "object", "required": ["kind", "items"],
+          "properties": { "kind":  { "const": "array" },
+                          "items": { "type": "array", "items": { "$ref": "#/$defs/RValue" } } } },
+        { "type": "object", "required": ["kind", "type", "fields"],
+          "properties": { "kind":   { "const": "struct" },
+                          "type":   { "type": "string" },
+                          "fields": { "type": "array", "items": { "$ref": "#/$defs/Field" } } } },
+        { "type": "object", "required": ["kind", "size", "items"],
+          "properties": { "kind":  { "const": "stack" },
+                          "size":  { "type": "integer", "minimum": 0 },
+                          "items": { "type": "array", "items": { "$ref": "#/$defs/RValue" } } } },
+        { "type": "object", "required": ["kind"],
+          "properties": { "kind": { "const": "undef" } } },
+        { "type": "object", "required": ["kind", "type"],
+          "properties": { "kind": { "const": "elided" },
+                          "type": { "type": "string" } } },
+        { "type": "object", "required": ["kind", "type", "repr"],
+          "properties": { "kind": { "const": "opaque" },
+                          "type": { "type": "string" },
+                          "repr": { "type": "string" } } }
+      ]
+    },
+
+    "Field": {
+      "type": "object",
+      "required": ["name", "value"],
+      "properties": {
+        "name":  { "type": "string" },
+        "value": { "$ref": "#/$defs/RValue" }
+      }
+    }
+  }
+}
