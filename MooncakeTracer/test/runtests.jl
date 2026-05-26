@@ -66,6 +66,7 @@ end
 foo(x) = x[1] + sum(x[2])
 bump!(c::Cell) = (c.v = c.v * c.v; c.v)
 vpair(x::Vector{Float64}) = (copy(x), sum(x))
+branchy(x::Float64) = x > 0 ? x * x : sin(x)
 
 """Central finite-difference gradient of a scalar-valued `f` over a flat list of
 scalar inputs. `build(vals)` rebuilds the argument; `f` must not be observed
@@ -201,10 +202,48 @@ end
     end
 
     # =====================================================================
+    @testset "Example 4: branchy  (control flow)" begin
+        for x in [2.0, 0.5, -1.0, -2.5]
+            r = interp_ad(branchy, x, 1.0)
+
+            # A — analytic + finite difference
+            @test r.primal == branchy(x)
+            @test isapprox(flat(r.grad)[1], x > 0 ? 2x : cos(x); rtol=1e-12, atol=1e-12)
+            fd = fd_grad(branchy, v -> v[1], [x])
+            @test isapprox(flat(r.grad), fd; rtol=1e-4, atol=1e-6)
+
+            # C — whole pipeline
+            cache = Mooncake.prepare_gradient_cache(branchy, x)
+            _, vg = Mooncake.value_and_gradient!!(cache, branchy, x)
+            @test isapprox(flat(r.grad), flat(vg[2]); rtol=1e-12, atol=1e-12)
+
+            # D — non-mutating: primal never moves
+            @test r.post_fwd_primal == x
+            @test r.restored_primal == x
+        end
+
+        # B — same-IR OpaqueClosure equivalence (bit-exact)
+        for x in [2.0, -1.0]
+            ir = interp_ad(branchy, x, 1.0)
+            oc = oc_ad(branchy, x, 1.0)
+            @test ir.primal === oc.primal
+            @test flat(ir.grad) == flat(oc.grad)
+        end
+
+        # G — seed linearity on both executed branches
+        for x in [2.0, -1.0]
+            g1 = interp_ad(branchy, x, 1.0).grad
+            g2 = interp_ad(branchy, x, -3.0).grad
+            @test isapprox(flat(g2), -3.0 .* flat(g1); rtol=1e-12)
+        end
+    end
+
+    # =====================================================================
     @testset "E: trace structural invariants" begin
         for (id, inputs) in [("scalar-vector", Dict("x1" => 2.0, "x2" => [1.0, 3.0, 5.0])),
                              ("mutation", Dict("v" => 3.0)),
-                             ("vector-pair", Dict("x" => [1.0, 2.0, 3.0]))]
+                             ("vector-pair", Dict("x" => [1.0, 2.0, 3.0])),
+                             ("branch", Dict("x" => 2.0))]
             t = build_trace(id, inputs, Dict{String,Any}())
             steps = t["steps"]
             @test !isempty(steps)
@@ -250,14 +289,24 @@ end
                     build_trace("vector-pair", Dict("x" => [1.0, 2.0, 3.0]),
                                 Dict{String,Any}())["steps"]) == 0
         @test count(s -> s["phase"] == "restore",
+                    build_trace("branch", Dict("x" => 2.0),
+                                Dict{String,Any}())["steps"]) == 0
+        @test count(s -> s["phase"] == "restore",
                     build_trace("mutation", Dict("v" => 3.0),
                                 Dict{String,Any}())["steps"]) >= 1
+
+        # branchy uses stack 1 as Mooncake's block stack: the forward pass
+        # records the chosen branch and the reverse pass consumes it.
+        branch_t = build_trace("branch", Dict("x" => 2.0), Dict{String,Any}())
+        branch_worlds = MW.replay_worlds(branch_t["initialState"], branch_t["events"])
+        @test maximum(w["tape"][1]["size"] for w in branch_worlds) >= 1
+        @test branch_worlds[end]["tape"][1]["size"] == 0
     end
 
     # =====================================================================
     @testset "F: IR is input-independent (per signature)" begin
         # The stepped IR depends only on the type signature: same text + step
-        # count for every numeric input — the assumption editable inputs rely on.
+        # count for these straight-line numeric inputs.
         t_ref = build_trace("scalar-vector",
                             Dict("x1" => 2.0, "x2" => [1.0, 3.0, 5.0]), Dict{String,Any}())
         for inputs in [Dict("x1" => -9.0, "x2" => [4.0]),
@@ -271,8 +320,8 @@ end
                   [i["text"] for i in t_ref["steppedStages"]["rvs_ir"]]
         end
 
-        # vector-pair: IR identical for any input vector length (the editable
-        # cotangent vector tracks that length, so the UI relies on this too).
+        # vector-pair: IR identical for any input vector length; the baked
+        # cotangent vector is normalized to match that length.
         vp_ref = build_trace("vector-pair", Dict("x" => [1.0, 2.0]), Dict{String,Any}())
         for x in [[3.0], Float64[], [1.0, 2.0, 3.0, 4.0, 5.0]]
             t = build_trace("vector-pair", Dict("x" => x), Dict{String,Any}())
@@ -281,6 +330,17 @@ end
                   [i["text"] for i in vp_ref["steppedStages"]["fwd_ir"]]
             @test [i["text"] for i in t["steppedStages"]["rvs_ir"]] ==
                   [i["text"] for i in vp_ref["steppedStages"]["rvs_ir"]]
+        end
+
+        # branchy: full IR text is still input-independent, but executed step
+        # counts may differ because the trace follows the chosen branch.
+        br_ref = build_trace("branch", Dict("x" => 2.0), Dict{String,Any}())
+        for x in [-1.0, 0.5]
+            t = build_trace("branch", Dict("x" => x), Dict{String,Any}())
+            @test [i["text"] for i in t["steppedStages"]["fwd_ir"]] ==
+                  [i["text"] for i in br_ref["steppedStages"]["fwd_ir"]]
+            @test [i["text"] for i in t["steppedStages"]["rvs_ir"]] ==
+                  [i["text"] for i in br_ref["steppedStages"]["rvs_ir"]]
         end
     end
 end

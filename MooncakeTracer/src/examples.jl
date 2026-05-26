@@ -1,12 +1,12 @@
 # Example functions whose Mooncake reverse-mode AD we trace.
 #
-# The IR and trace depend only on the type signature (fixed per example); the
-# numeric inputs and the output seed are editable and re-run through the
-# interpreter.
+# Each example is baked into a static JSON trace using its default inputs and
+# output seed. The un-inlined IR depends on the type signature, while executed
+# steps may differ for examples with value-dependent control flow.
 #
 # To add an example: define the function and append an `ExampleSpec` to
-# `EXAMPLES` below — a way to build the argument from editable inputs and the
-# output cotangent from an editable seed. Then `npm run bake` to regenerate
+# `EXAMPLES` below — a way to build the argument from baked inputs and the
+# output cotangent from the baked seed. Then `npm run bake` to regenerate
 # `web/public/traces/`.
 
 """A mutable cell — used by the mutation example so the in-place update has a
@@ -27,8 +27,11 @@ bump!(c::Cell) = (c.v = c.v * c.v; c.v)
 # inline into hundreds of statements on Julia 1.12.
 vpair(x::Vector{Float64}) = (copy(x), sum(x))
 
-"""Pad with `1.0` / truncate `v` to length `n` — keeps an edited cotangent
-vector consistent with the (editable) input vector length."""
+# --- Example 4: value-dependent control flow (teaches the block stack) -------
+branchy(x::Float64) = x > 0 ? x * x : sin(x)
+
+"""Pad with `1.0` / truncate `v` to length `n` — keeps a cotangent vector
+consistent with the input vector length."""
 function fit_vector(v::Vector{Float64}, n::Int)
     length(v) == n && return v
     length(v) > n && return v[1:n]
@@ -39,7 +42,7 @@ end
     ExampleSpec
 
 Static description of one example: how to build its argument and its output
-cotangent (seed) from editable inputs, plus display metadata.
+cotangent (seed) from baked inputs, plus display metadata.
 """
 struct ExampleSpec
     id::String
@@ -50,7 +53,7 @@ struct ExampleSpec
     make_arg::Any          # Dict{String,Any} -> argument value
     input_specs::Vector{NamedTuple}
     default_inputs::Dict{String,Any}
-    seed_specs::Vector{NamedTuple}     # editable fields of the output cotangent
+    seed_specs::Vector{NamedTuple}     # fields of the output cotangent
     default_seed::Dict{String,Any}
     # (seed_dict, arg) -> (cotangent, effective_seed_dict). The cotangent is a
     # valid Mooncake tangent of the output; the effective dict echoes back any
@@ -123,6 +126,24 @@ const EXAMPLES = ExampleSpec[
             dv = fit_vector(Vector{Float64}(s["dy_vec"]), length(arg))
             ds = Float64(s["dy_sum"])
             return ((dv, ds), Dict{String,Any}("dy_vec" => dv, "dy_sum" => ds))
+        end,
+    ),
+    ExampleSpec(
+        "branch",
+        "Branching control flow",
+        "branchy(x) = x > 0 ? x * x : sin(x). Mooncake records the forward " *
+        "branch choice on stack 1, then pops it in reverse so the pullback " *
+        "visits the same block.",
+        "branchy(x) = x > 0 ? x * x : sin(x)",
+        branchy,
+        inp -> Float64(inp["x"]),
+        NamedTuple[(name="x", kind="scalar", label="x (scalar)")],
+        Dict{String,Any}("x" => 2.0),
+        NamedTuple[(name="dy", kind="scalar", label="dy (output cotangent)")],
+        Dict{String,Any}("dy" => 1.0),
+        function (s, arg)
+            d = Float64(s["dy"])
+            return (d, Dict{String,Any}("dy" => d))
         end,
     ),
 ]

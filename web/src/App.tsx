@@ -9,9 +9,7 @@ import { IRView } from "./components/IRView";
 import { SourcePane } from "./components/SourcePane";
 import { StateInspector } from "./components/StateInspector";
 import { TapeInspector } from "./components/TapeInspector";
-import { ResultPanel } from "./components/ResultPanel";
 import { IRStageViewer } from "./components/IRStageViewer";
-import { NotesPanel } from "./components/NotesPanel";
 import { TraceLoader } from "./components/TraceLoader";
 
 export function App() {
@@ -104,23 +102,23 @@ export function App() {
           ) : (
             <span className="flex items-center gap-2">
               <Loader2 size={16} className="animate-spin" />
-              Generating the first trace — the Julia server is compiling
-              Mooncake…
+              Loading the baked trace…
             </span>
           )}
         </div>
       ) : (
-        <main className="grid flex-1 grid-cols-[20rem_minmax(0,1fr)_22rem] gap-3 overflow-hidden p-3">
+        <main className="grid flex-1 grid-cols-[24rem_minmax(0,1fr)] gap-3 overflow-hidden p-3">
           {/* left column */}
           <div className="flex min-h-0 flex-col gap-3 overflow-hidden">
             <SourcePane
               source={trace.source}
-              signature={trace.signature}
-              description={trace.description}
-              inputs={trace.inputs}
+              input={trace.initialState.input}
               primal={trace.result.primalValue}
             />
-            <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-border bg-surface-1">
+            <div className="rounded-lg border border-border-subtle bg-surface-1 p-2.5">
+              <TapeInspector state={state} prevState={prevState} />
+            </div>
+            <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-border-subtle bg-surface-1">
               <div className="flex gap-1 border-b border-border-subtle p-1.5">
                 <TabButton
                   active={leftTab === "trace"}
@@ -158,22 +156,13 @@ export function App() {
           {/* center column */}
           <div className="flex min-h-0 flex-col gap-3 overflow-y-auto pr-1">
             <InstructionPane step={step} />
-            <div className="rounded-lg border border-border bg-surface-1 p-3">
+            <div className="rounded-lg border border-border-subtle bg-surface-1 p-3">
               <StateInspector
                 state={state}
                 prevState={prevState}
                 stepIndex={dbg.stepIndex}
               />
             </div>
-          </div>
-
-          {/* right column */}
-          <div className="flex min-h-0 flex-col gap-3 overflow-y-auto pr-1">
-            <div className="rounded-lg border border-border bg-surface-1 p-3">
-              <TapeInspector state={state} prevState={prevState} />
-            </div>
-            <ResultPanel trace={trace} />
-            <NotesPanel />
           </div>
         </main>
       )}

@@ -103,7 +103,7 @@ export interface TraceResult {
   checks: TraceCheck[];
 }
 
-/** Editable numeric fields, keyed by name — used for both inputs and the seed. */
+/** Baked numeric fields, keyed by name — used for both inputs and the seed. */
 export type ValueMap = Record<string, number | number[]>;
 
 /**

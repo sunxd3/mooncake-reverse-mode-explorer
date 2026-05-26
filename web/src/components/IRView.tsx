@@ -45,7 +45,8 @@ export function IRView({
             <div
               ref={active ? activeRef : undefined}
               onClick={() => onGoto(gi)}
-              className={`flex cursor-pointer items-start gap-1 rounded px-1 py-[3px] ${
+              title={s.text}
+              className={`flex cursor-pointer items-center gap-1 overflow-hidden rounded px-1 py-[3px] ${
                 active
                   ? `${m.bg} ${m.text} font-medium`
                   : done
@@ -72,7 +73,7 @@ export function IRView({
               <span className="w-3 shrink-0 select-none text-center">
                 {active ? "▸" : ""}
               </span>
-              <code className="whitespace-pre-wrap break-all">{s.text}</code>
+              <code className="min-w-0 truncate whitespace-nowrap">{s.text}</code>
             </div>
           </div>
         );
