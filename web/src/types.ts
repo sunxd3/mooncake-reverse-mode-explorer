@@ -20,9 +20,20 @@ export interface IRStmt {
   type: string;
 }
 
+/** A single argument value with display metadata. Lives on `World.args` and
+ * inside `pass_start` events. */
+export interface ArgValue {
+  id: string;
+  role: string;
+  value: RValue;
+}
+
+/** Per-step world reconstructed by replaying the event stream. Shape matches
+ * what the snapshot model used to emit per step, so UI consumers see the same
+ * data they did before linearization. */
 export interface DebuggerState {
   ssa: { id: string; value: RValue }[];
-  args: { id: string; role: string; value: RValue }[];
+  args: ArgValue[];
   tape: RValue[];
   input: RValue;
 }
@@ -42,7 +53,29 @@ export interface TraceStep {
   mutatesPrimal: boolean;
   explanation: string;
   produced: RValue | null;
-  state: DebuggerState;
+}
+
+/** Identifies one of the four kinds of tracked roots an event can mutate. */
+export type Root =
+  | { kind: "input" }
+  | { kind: "arg"; index: number }
+  | { kind: "tape"; index: number }
+  | { kind: "ssa"; pc: number };
+
+/** Named field (string) or 0-based index (number) into the rendered tree. */
+export type PathComponent = string | number;
+
+export type TraceEvent =
+  | { t: "pass_start"; pass: "forward" | "reverse"; args: ArgValue[] }
+  | { t: "ssa_define"; pc: number; value: RValue }
+  | { t: "mut_set"; root: Root; path: PathComponent[]; value: RValue }
+  | { t: "stack_push"; root: Root; path: PathComponent[]; value: RValue }
+  | { t: "stack_pop"; root: Root; path: PathComponent[] }
+  | { t: "step_marker"; stepIndex: number };
+
+export interface InitialState {
+  input: RValue;
+  tape: RValue[];
 }
 
 export interface IRStage {
@@ -84,6 +117,7 @@ export interface CotangentSplit {
 }
 
 export interface Trace {
+  schemaVersion: number;
   exampleId: string;
   title: string;
   description: string;
@@ -95,6 +129,8 @@ export interface Trace {
   irStages: IRStage[];
   steppedStages: { fwd_ir: IRStmt[]; rvs_ir: IRStmt[] };
   steps: TraceStep[];
+  initialState: InitialState;
+  events: TraceEvent[];
   counts: { forward: number; reverse: number; total: number };
   result: TraceResult;
 }

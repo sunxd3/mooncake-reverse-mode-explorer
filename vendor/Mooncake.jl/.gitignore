@@ -1,9 +1,0 @@
-Manifest*
-dev
-analysis_results
-.vscode
-profile.pb.gz
-scratch.jl
-docs/build/
-docs/site/
-temp/

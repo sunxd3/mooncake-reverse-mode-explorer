@@ -2,16 +2,12 @@
   "name": "mooncake-walkthrough",
   "private": true,
   "version": "0.1.0",
-  "description": "Interactive walkthrough of Mooncake's real reverse-mode AD IR",
+  "description": "Static walkthrough of Mooncake's real reverse-mode AD IR",
   "scripts": {
     "setup": "julia julia/setup.jl && npm --prefix web install",
-    "dev": "concurrently -n julia,web -c blue,green -k \"julia julia/bin/serve.jl 8754\" \"npm --prefix web run dev\"",
-    "dev:julia": "julia julia/bin/serve.jl 8754",
-    "dev:web": "npm --prefix web run dev",
+    "dev": "npm --prefix web run dev",
     "build": "npm --prefix web run build",
+    "bake": "julia --project=julia julia/bin/bake_static.jl",
     "test": "julia julia/test/validate.jl"
-  },
-  "devDependencies": {
-    "concurrently": "^9.1.0"
   }
 }

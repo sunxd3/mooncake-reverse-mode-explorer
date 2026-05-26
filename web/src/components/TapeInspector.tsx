@@ -1,16 +1,16 @@
 import { Layers } from "lucide-react";
 import { ValueView } from "../lib/value";
-import type { RValue, TraceStep } from "../types";
+import type { DebuggerState, RValue } from "../types";
 
 export function TapeInspector({
-  step,
-  prevStep,
+  state,
+  prevState,
 }: {
-  step: TraceStep;
-  prevStep: TraceStep | null;
+  state: DebuggerState;
+  prevState: DebuggerState | null;
 }) {
-  const tape = step.state.tape;
-  const prevTape = prevStep?.state.tape ?? [];
+  const tape = state.tape;
+  const prevTape = prevState?.tape ?? [];
 
   return (
     <div>

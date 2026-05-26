@@ -217,9 +217,13 @@ end
             # indices are 1..N and contiguous
             @test [s["index"] for s in steps] == collect(1:length(steps))
 
-            # SSA-defined count is monotonically non-decreasing within a stage
+            # SSA-defined count is monotonically non-decreasing within a stage.
+            # State is reconstructed by replaying the event stream.
+            worlds = MW.replay_worlds(t["initialState"], t["events"])
+            @test length(worlds) == length(steps)
             for stage in ("fwd_ir", "rvs_ir")
-                counts = [length(s["state"]["ssa"]) for s in steps if s["stage"] == stage]
+                counts = [length(worlds[i]["ssa"]) for (i, s) in enumerate(steps)
+                          if s["stage"] == stage]
                 @test issorted(counts)
             end
 

@@ -9,15 +9,13 @@ module MooncakeWalkthrough
 
 using Mooncake
 import JSON3
-import HTTP
 
 include("examples.jl")
 include("render.jl")
 include("stepper.jl")
 include("ir_export.jl")
 include("trace.jl")
-include("server.jl")
 
-export build_trace, examples_manifest, serve
+export build_trace, examples_manifest
 
 end # module

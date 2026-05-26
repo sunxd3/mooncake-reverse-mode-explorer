@@ -1,5 +1,5 @@
 import { ValueView } from "../lib/value";
-import type { RValue, TraceStep } from "../types";
+import type { DebuggerState, RValue } from "../types";
 
 function Row({
   label,
@@ -48,18 +48,18 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 export function StateInspector({
-  step,
-  prevStep,
+  state,
+  prevState,
   stepIndex,
 }: {
-  step: TraceStep;
-  prevStep: TraceStep | null;
+  state: DebuggerState;
+  prevState: DebuggerState | null;
   stepIndex: number;
 }) {
   const prevSsa = new Map(
-    (prevStep?.state.ssa ?? []).map((e) => [e.id, JSON.stringify(e.value)]),
+    (prevState?.ssa ?? []).map((e) => [e.id, JSON.stringify(e.value)]),
   );
-  const prevInput = prevStep ? JSON.stringify(prevStep.state.input) : null;
+  const prevInput = prevState ? JSON.stringify(prevState.input) : null;
 
   return (
     <div className="space-y-4">
@@ -67,15 +67,15 @@ export function StateInspector({
         <Row
           label="x"
           sub="primal value · ∂ tangent (fdata)"
-          value={step.state.input}
-          changed={prevInput !== null && prevInput !== JSON.stringify(step.state.input)}
+          value={state.input}
+          changed={prevInput !== null && prevInput !== JSON.stringify(state.input)}
           stepIndex={stepIndex}
           emphasis
         />
       </Section>
 
       <Section title="IR arguments">
-        {step.state.args.map((a) => (
+        {state.args.map((a) => (
           <Row
             key={a.id}
             label={a.id}
@@ -87,11 +87,11 @@ export function StateInspector({
         ))}
       </Section>
 
-      <Section title={`SSA registers · ${step.state.ssa.length}`}>
-        {step.state.ssa.length === 0 && (
+      <Section title={`SSA registers · ${state.ssa.length}`}>
+        {state.ssa.length === 0 && (
           <div className="px-1.5 text-xs italic text-ink-3">none defined yet</div>
         )}
-        {step.state.ssa.map((e) => {
+        {state.ssa.map((e) => {
           const now = JSON.stringify(e.value);
           const before = prevSsa.get(e.id);
           return (

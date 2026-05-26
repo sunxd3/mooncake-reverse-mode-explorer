@@ -2,7 +2,6 @@ import { useState } from "react";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { useDebugger } from "./state/useDebugger";
 import { ExamplePicker } from "./components/ExamplePicker";
-import { InputEditor } from "./components/InputEditor";
 import { DebuggerControls } from "./components/DebuggerControls";
 import { Timeline } from "./components/Timeline";
 import { InstructionPane } from "./components/InstructionPane";
@@ -10,18 +9,17 @@ import { IRView } from "./components/IRView";
 import { SourcePane } from "./components/SourcePane";
 import { StateInspector } from "./components/StateInspector";
 import { TapeInspector } from "./components/TapeInspector";
-import { SeedPanel } from "./components/SeedPanel";
 import { ResultPanel } from "./components/ResultPanel";
 import { IRStageViewer } from "./components/IRStageViewer";
 import { NotesPanel } from "./components/NotesPanel";
+import { TraceLoader } from "./components/TraceLoader";
 
 export function App() {
   const dbg = useDebugger();
   const [leftTab, setLeftTab] = useState<"trace" | "pipeline">("trace");
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  const { trace, step, stepIndex } = dbg;
-  const prevStep =
-    trace && stepIndex > 0 ? trace.steps[stepIndex - 1] : null;
+  const { trace, step, state, prevState } = dbg;
   const activeStage: "fwd_ir" | "rvs_ir" = step?.stage ?? "fwd_ir";
 
   return (
@@ -35,43 +33,47 @@ export function App() {
           <span className="text-xs text-ink-3">
             stepping real Mooncake AD IR
           </span>
+          {dbg.loadedLabel && (
+            <span className="truncate text-[11px] text-ink-3" title={dbg.loadedLabel}>
+              loaded: {dbg.loadedLabel}
+            </span>
+          )}
         </div>
-        {dbg.examples.length > 0 && (
-          <ExamplePicker
-            examples={dbg.examples}
-            current={dbg.exampleId}
-            onSelect={dbg.selectExample}
+        <div className="flex items-center gap-2">
+          <TraceLoader
+            onLoad={(t, label) => {
+              setLoadError(null);
+              dbg.loadTrace(t, label);
+            }}
+            onError={setLoadError}
           />
-        )}
+          {dbg.examples.length > 0 && (
+            <ExamplePicker
+              examples={dbg.examples}
+              current={dbg.exampleId}
+              onSelect={dbg.selectExample}
+            />
+          )}
+        </div>
       </header>
 
       {/* ---- toolbar ---- */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-surface-1 px-4 py-2">
-        {dbg.example && (
-          <InputEditor
-            example={dbg.example}
-            inputs={dbg.inputs}
-            setInput={dbg.setInput}
-            onReset={dbg.resetInputs}
-          />
+      <div className="flex flex-wrap items-center justify-end gap-3 border-b border-border bg-surface-1 px-4 py-2">
+        {dbg.status === "loading" && (
+          <span className="flex items-center gap-1 text-xs text-ink-3">
+            <Loader2 size={12} className="animate-spin" />
+            loading trace…
+          </span>
         )}
-        <div className="flex items-center gap-3">
-          {dbg.status === "loading" && (
-            <span className="flex items-center gap-1 text-xs text-ink-3">
-              <Loader2 size={12} className="animate-spin" />
-              re-running Mooncake…
-            </span>
-          )}
-          <DebuggerControls
-            stepIndex={dbg.stepIndex}
-            total={trace?.steps.length ?? 0}
-            isPlaying={dbg.isPlaying}
-            onReset={dbg.reset}
-            onBack={dbg.stepBack}
-            onForward={dbg.stepForward}
-            onTogglePlay={dbg.togglePlay}
-          />
-        </div>
+        <DebuggerControls
+          stepIndex={dbg.stepIndex}
+          total={trace?.steps.length ?? 0}
+          isPlaying={dbg.isPlaying}
+          onReset={dbg.reset}
+          onBack={dbg.stepBack}
+          onForward={dbg.stepForward}
+          onTogglePlay={dbg.togglePlay}
+        />
       </div>
 
       {/* ---- timeline ---- */}
@@ -87,15 +89,15 @@ export function App() {
       )}
 
       {/* ---- error banner ---- */}
-      {dbg.status === "error" && (
+      {(dbg.status === "error" || loadError) && (
         <div className="flex items-center gap-2 border-b border-bad bg-red-50 px-4 py-2 text-sm text-bad">
           <AlertTriangle size={15} />
-          {dbg.error}
+          {loadError ?? dbg.error}
         </div>
       )}
 
       {/* ---- main ---- */}
-      {!trace || !step ? (
+      {!trace || !step || !state ? (
         <div className="flex flex-1 items-center justify-center text-sm text-ink-3">
           {dbg.status === "error" ? (
             "Could not load a trace."
@@ -158,8 +160,8 @@ export function App() {
             <InstructionPane step={step} />
             <div className="rounded-lg border border-border bg-surface-1 p-3">
               <StateInspector
-                step={step}
-                prevStep={prevStep}
+                state={state}
+                prevState={prevState}
                 stepIndex={dbg.stepIndex}
               />
             </div>
@@ -168,16 +170,8 @@ export function App() {
           {/* right column */}
           <div className="flex min-h-0 flex-col gap-3 overflow-y-auto pr-1">
             <div className="rounded-lg border border-border bg-surface-1 p-3">
-              <TapeInspector step={step} prevStep={prevStep} />
+              <TapeInspector state={state} prevState={prevState} />
             </div>
-            {dbg.example && (
-              <SeedPanel
-                example={dbg.example}
-                seed={dbg.seed}
-                setSeedInput={dbg.setSeedInput}
-                split={trace.cotangentSplit}
-              />
-            )}
             <ResultPanel trace={trace} />
             <NotesPanel />
           </div>

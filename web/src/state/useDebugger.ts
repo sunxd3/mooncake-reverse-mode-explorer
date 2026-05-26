@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { fetchExamples, fetchTrace } from "../api";
-import type { ExampleManifest, Trace, TraceStep } from "../types";
+import { fetchExamples, fetchTrace, fetchTraceFromUrl } from "../api";
+import { buildWorlds, worldToDebuggerState } from "../lib/replay";
+import type { DebuggerState, ExampleManifest, Trace, TraceStep } from "../types";
 
 const PLAY_INTERVAL_MS = 850;
 
 type Status = "init" | "loading" | "ready" | "error";
-type Inputs = Record<string, number | number[]>;
 
 export interface DebuggerApi {
   examples: ExampleManifest[];
@@ -13,19 +13,19 @@ export interface DebuggerApi {
   exampleId: string;
   selectExample: (id: string) => void;
 
-  inputs: Inputs;
-  setInput: (name: string, value: number | number[]) => void;
-  seed: Inputs;
-  setSeedInput: (name: string, value: number | number[]) => void;
-  resetInputs: () => void;
-
   trace: Trace | null;
   status: Status;
   error: string | null;
+  /** Replace the current trace with a user-supplied one (drag-drop / URL). */
+  loadTrace: (t: Trace, label?: string) => void;
+  /** Display label for a user-loaded trace, or null when on a baked example. */
+  loadedLabel: string | null;
 
   stepIndex: number;
   goto: (i: number) => void;
   step: TraceStep | null;
+  state: DebuggerState | null;
+  prevState: DebuggerState | null;
   stepForward: () => void;
   stepBack: () => void;
   reset: () => void;
@@ -40,14 +40,11 @@ export interface DebuggerApi {
 export function useDebugger(): DebuggerApi {
   const [examples, setExamples] = useState<ExampleManifest[]>([]);
   const [exampleId, setExampleId] = useState<string>("");
-  const [inputs, setInputs] = useState<Inputs>({});
-  // The output cotangent (seed), keyed like `inputs`. For a scalar output it is
-  // a single `dy`; for a structured output it has one field per cotangent leaf.
-  const [seed, setSeed] = useState<Inputs>({});
 
   const [trace, setTrace] = useState<Trace | null>(null);
   const [status, setStatus] = useState<Status>("init");
   const [error, setError] = useState<string | null>(null);
+  const [loadedLabel, setLoadedLabel] = useState<string | null>(null);
 
   const [stepIndex, setStepIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -58,106 +55,90 @@ export function useDebugger(): DebuggerApi {
     [examples, exampleId],
   );
 
-  // --- load the example manifest once (retry while Julia is still booting) --
+  // --- load examples + optionally a trace from ?trace=<url> ----------------
   useEffect(() => {
     let cancelled = false;
-    const load = (attempt: number) => {
-      fetchExamples()
-        .then((list) => {
-          if (cancelled) return;
-          setExamples(list);
-          if (list.length > 0) {
-            setExampleId(list[0].id);
-            setInputs({ ...list[0].defaultInputs });
-            setSeed({ ...list[0].defaultSeed });
-          }
-        })
-        .catch((e) => {
-          if (cancelled) return;
-          if (attempt < 40) {
-            window.setTimeout(() => load(attempt + 1), 2000);
-          } else {
-            setStatus("error");
-            setError(`${e.message} — is the Julia trace server running?`);
-          }
-        });
-    };
-    load(0);
+    fetchExamples()
+      .then((list) => {
+        if (cancelled) return;
+        setExamples(list);
+        if (list.length > 0) setExampleId(list[0].id);
+        const params = new URLSearchParams(window.location.search);
+        const traceUrl = params.get("trace");
+        if (traceUrl) {
+          setStatus("loading");
+          fetchTraceFromUrl(traceUrl)
+            .then((t) => {
+              if (cancelled) return;
+              setTrace(t);
+              setLoadedLabel(traceUrl);
+              setStatus("ready");
+              setError(null);
+              setStepIndex(0);
+            })
+            .catch((e) => {
+              if (cancelled) return;
+              setStatus("error");
+              setError(`?trace= load failed: ${e.message}`);
+            });
+        }
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        setStatus("error");
+        setError(e.message);
+      });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  // --- switching example resets its inputs ---------------------------------
-  const selectExample = useCallback(
-    (id: string) => {
-      const ex = examples.find((e) => e.id === id);
-      if (!ex) return;
-      setExampleId(id);
-      setInputs({ ...ex.defaultInputs });
-      setSeed({ ...ex.defaultSeed });
-      setIsPlaying(false);
-      setBreakpoints(new Set());
-    },
-    [examples],
-  );
+  // --- switching example reloads its baked trace ---------------------------
+  const selectExample = useCallback((id: string) => {
+    setExampleId(id);
+    setIsPlaying(false);
+    setBreakpoints(new Set());
+    setLoadedLabel(null);
+  }, []);
 
-  const resetInputs = useCallback(() => {
-    if (example) {
-      setInputs({ ...example.defaultInputs });
-      setSeed({ ...example.defaultSeed });
+  // --- load a user-supplied trace (drag-drop, file picker, ?trace=) -------
+  const loadTrace = useCallback((t: Trace, label?: string) => {
+    if (t.schemaVersion !== 1) {
+      setStatus("error");
+      setError(`Unsupported trace schemaVersion: ${t.schemaVersion}`);
+      return;
     }
-  }, [example]);
-
-  const setInput = useCallback((name: string, value: number | number[]) => {
-    setInputs((prev) => ({ ...prev, [name]: value }));
+    setTrace(t);
+    setLoadedLabel(label ?? t.exampleId);
+    setStepIndex(0);
+    setIsPlaying(false);
+    setBreakpoints(new Set());
+    setStatus("ready");
+    setError(null);
   }, []);
 
-  const setSeedInput = useCallback((name: string, value: number | number[]) => {
-    setSeed((prev) => ({ ...prev, [name]: value }));
-  }, []);
-
-  // --- (debounced) trace fetch when example / inputs / seed change ---------
+  // --- fetch baked trace whenever the selected example changes -------------
   const reqId = useRef(0);
-  const inputsKey = JSON.stringify(inputs);
-  // Order-insensitive: avoids spurious refetches if key order ever differs.
-  const seedKey = JSON.stringify(seed, Object.keys(seed).sort());
   useEffect(() => {
-    if (!example) return;
-    // Skip transient states where inputs / seed don't yet match the example.
-    if (!example.inputs.every((spec) => spec.name in inputs)) return;
-    if (!example.seedInputs.every((spec) => spec.name in seed)) return;
-
+    if (!exampleId || loadedLabel) return;
     const myReq = ++reqId.current;
     const controller = new AbortController();
-    const timer = window.setTimeout(() => {
-      setStatus("loading");
-      fetchTrace(example.id, inputs, seed, controller.signal)
-        .then((t) => {
-          if (myReq !== reqId.current) return;
-          setTrace(t);
-          setStatus("ready");
-          setError(null);
-          setStepIndex((i) => Math.min(i, Math.max(0, t.steps.length - 1)));
-          // The server may coerce the seed (e.g. resize a cotangent vector to
-          // match the input vector). Adopt its effective seed so the editor
-          // stays in sync; this settles in one extra fetch (the fit is idempotent).
-          if (JSON.stringify(t.seed, Object.keys(t.seed).sort()) !== seedKey) {
-            setSeed(t.seed);
-          }
-        })
-        .catch((e) => {
-          if (myReq !== reqId.current || e.name === "AbortError") return;
-          setStatus("error");
-          setError(e.message);
-        });
-    }, 280);
-    return () => {
-      window.clearTimeout(timer);
-      controller.abort();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [example, inputsKey, seedKey]);
+    setStatus("loading");
+    fetchTrace(exampleId, controller.signal)
+      .then((t) => {
+        if (myReq !== reqId.current) return;
+        setTrace(t);
+        setStatus("ready");
+        setError(null);
+        setStepIndex((i) => Math.min(i, Math.max(0, t.steps.length - 1)));
+      })
+      .catch((e) => {
+        if (myReq !== reqId.current || e.name === "AbortError") return;
+        setStatus("error");
+        setError(e.message);
+      });
+    return () => controller.abort();
+  }, [exampleId, loadedLabel]);
 
   // --- stepping ------------------------------------------------------------
   const total = trace?.steps.length ?? 0;
@@ -230,22 +211,29 @@ export function useDebugger(): DebuggerApi {
 
   const step = trace && total > 0 ? trace.steps[stepIndex] : null;
 
+  const worlds = useMemo(
+    () => (trace ? buildWorlds(trace.initialState, trace.events) : null),
+    [trace],
+  );
+  const state = worlds && total > 0 ? worldToDebuggerState(worlds[stepIndex]) : null;
+  const prevState =
+    worlds && stepIndex > 0 ? worldToDebuggerState(worlds[stepIndex - 1]) : null;
+
   return {
     examples,
     example,
     exampleId,
     selectExample,
-    inputs,
-    setInput,
-    seed,
-    setSeedInput,
-    resetInputs,
     trace,
     status,
     error,
+    loadTrace,
+    loadedLabel,
     stepIndex,
     goto,
     step,
+    state,
+    prevState,
     stepForward,
     stepBack,
     reset,
