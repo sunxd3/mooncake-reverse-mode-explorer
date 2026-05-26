@@ -66,10 +66,15 @@ Julia code. Re-run after adding an example or upgrading Mooncake.
 
 ```bash
 BASE_PATH=/mooncake-walkthrough/ npm run build
-# → web/dist/ is a fully static bundle. Drop it on GitHub Pages, Netlify, …
+# → web/dist/ is a fully static bundle. Drop it on any static host.
 ```
 
 `BASE_PATH` is the public URL prefix (omit for root-served sites).
+
+GitHub Pages is wired up via `.github/workflows/pages.yml` — every push to
+`main` builds and deploys. One-time setup: in repo Settings → Pages, set
+**Source** to **GitHub Actions**. The site then lives at
+`https://<owner>.github.io/mooncake-walkthrough/`.
 
 ## Use
 
